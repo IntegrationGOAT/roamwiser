@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 
 const CountUp = ({ end, duration = 2000, suffix = '', prefix = '' }: { end: number, duration?: number, suffix?: string, prefix?: string }) => {
   const [count, setCount] = useState(0)
@@ -121,8 +121,6 @@ function App() {
   const [activeSection, setActiveSection] = useState<string>('hero')
   const [expandedCards, setExpandedCards] = useState<{ [key: string]: boolean }>({})
 
-  const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({})
-
   const interests = ['Adventure', 'Food', 'Nature', 'Culture', 'Nightlife', 'Wellness']
 
   const toggleChip = (chip: string) => {
@@ -184,7 +182,7 @@ function App() {
         <svg viewBox="0 0 60 1000" preserveAspectRatio="none">
           <line x1="30" y1="0" x2="30" y2="1000" stroke="rgba(237,243,234,.18)" strokeWidth="1.5" strokeDasharray="2 7"/>
           <g id="spine-dots">
-            {['hero', 'route', 'budget', 'safety', 'stay', 'about', 'contact'].map((id, i) => {
+            {['hero', 'route', 'budget', 'safety', 'stay', 'about', 'contact'].map((id) => {
               const section = document.getElementById(id)
               const y = section ? (section.offsetTop / (document.body.scrollHeight - window.innerHeight)) * 1000 : 0
               const labels: { [key: string]: string } = {
