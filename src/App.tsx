@@ -341,7 +341,7 @@ function App() {
               <span>Land, check into homestay, walk the backwaters promenade</span>
             </div>
             <div className="slot">
-              <span className="tag">Afternoon</span>
+                <span className="tag">Afternoon</span>
               <span>Spice market food trail with a local guide</span>
             </div>
             <div className="slot">
