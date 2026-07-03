@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { generateItineraries, generateBudget, generateRiskPlanning, generateExploreSpots } from './services/mockAI.ts'
-import type { TripData, Itinerary, BudgetData, RiskData, ExploreSpot } from './services/mockAI.ts'
+import { generateItineraries, generateBudget, generateRiskPlanning, generateExploreSpots } from './services/huggingface.ts'
+import type { TripData, Itinerary, BudgetData, RiskData, ExploreSpot } from './services/huggingface.ts'
 import heroBg from './assets/assets.jpg'
 
 const CountUp = ({ end, duration = 2000, suffix = '', prefix = '' }: { end: number, duration?: number, suffix?: string, prefix?: string }) => {
