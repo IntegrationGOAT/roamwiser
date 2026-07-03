@@ -5,16 +5,5 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: {
-    proxy: {
-      '/api/huggingface': {
-        target: 'https://api-inference.huggingface.co',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/huggingface/, ''),
-        headers: {
-          'Access-Control-Allow-Origin': '*'
-        }
-      }
-    }
-  }
+  server: {}
 })

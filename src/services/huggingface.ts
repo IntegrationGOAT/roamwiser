@@ -1,11 +1,8 @@
-// Using Hugging Face API (free tier available)
+// Using Hugging Face chat-completions API (free tier available)
 const API_TOKEN = import.meta.env.VITE_HUGGINGFACE_API_TOKEN || ''
-// When running via Vite dev server, use the proxy to avoid CORS issues
-// In production, this would need a proper backend proxy
-const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-  ? '/api/huggingface'
-  : 'https://api-inference.huggingface.co'
-const API_URL = `${API_BASE}/models/google/flan-t5-base`
+const API_BASE = import.meta.env.VITE_HUGGINGFACE_ENDPOINT || 'https://router.huggingface.co'
+const API_URL = `${API_BASE}/v1/chat/completions`
+const API_MODEL = 'meta-llama/Llama-3.1-8B-Instruct'
 
 export interface TripData {
   destination: string
@@ -60,19 +57,31 @@ async function callHuggingFaceAPI(prompt: string, _retries = 3): Promise<string>
   try {
     console.log('Calling Hugging Face API...')
 
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json'
+    }
+
+    if (API_TOKEN) {
+      headers.Authorization = `Bearer ${API_TOKEN}`
+    }
+
     const response = await fetch(API_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_TOKEN}`
-      },
+      headers,
       body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          max_length: 1000,
-          temperature: 0.7,
-          do_sample: true
-        }
+        model: API_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'Return only valid JSON. Do not include markdown fences, explanations, or extra text.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 2048
       })
     })
 
@@ -88,8 +97,8 @@ async function callHuggingFaceAPI(prompt: string, _retries = 3): Promise<string>
     console.log('Full API response:', data)
     
     // Handle different response formats
-    if (Array.isArray(data) && data[0] && data[0].generated_text) {
-      return data[0].generated_text
+    if (Array.isArray(data?.choices) && data.choices[0]?.message?.content) {
+      return data.choices[0].message.content
     } else if (data.generated_text) {
       return data.generated_text
     } else if (typeof data === 'string') {
@@ -104,32 +113,18 @@ async function callHuggingFaceAPI(prompt: string, _retries = 3): Promise<string>
 }
 
 export async function generateItineraries(tripData: TripData): Promise<Itinerary[]> {
-  const prompt = `Generate 4 unique travel itineraries for ${tripData.destination} for ${tripData.travelers} traveler(s) over ${tripData.tripLength} days. Interests: ${tripData.interests.join(', ')}.
+  const prompt = `Create 4 travel itineraries for ${tripData.destination}. Trip length: ${tripData.tripLength} days. Travelers: ${tripData.travelers}. Interests: ${tripData.interests.join(', ')}. Budget: ${tripData.budget}. Start date: ${tripData.startDate || 'today'}.
 
-For each itinerary provide:
-1. Title (e.g., "Heritage & Backwaters")
-2. Description (100 words)
-3. Day-by-day schedule with morning, afternoon, evening activities
-4. Dates starting from ${tripData.startDate || 'current date'}
+Return ONLY valid JSON as an array of 4 objects.
+Keep it compact:
+- title: 2-4 words
+- description: 1 sentence
+- morning/afternoon/evening: short phrases, 4-8 words each
+- one day entry for each trip day
 
-Format as JSON array:
-[
-  {
-    "id": "itin1",
-    "num": "ITINERARY 01",
-    "title": "Title",
-    "description": "Description",
-    "days": [
-      {
-        "day": 1,
-        "date": "July 15",
-        "morning": "Activity",
-        "afternoon": "Activity",
-        "evening": "Activity"
-      }
-    ]
-  }
-]`
+Use dates in order from the trip start date.
+Format:
+[{"id":"itin1","num":"ITINERARY 01","title":"...","description":"...","days":[{"day":1,"date":"...","morning":"...","afternoon":"...","evening":"..."}]}]`
 
   try {
     const text = await callHuggingFaceAPI(prompt)
@@ -138,7 +133,7 @@ Format as JSON array:
     // Extract JSON from response
     const jsonMatch = text.match(/\[[\s\S]*\]/)
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0])
+      return JSON.parse(jsonMatch[0].replace(/\s+/g, ' ').trim())
     }
     
     // If no JSON found, return empty array
