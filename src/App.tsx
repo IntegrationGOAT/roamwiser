@@ -818,7 +818,7 @@ function App() {
                 </div>
                 {expandedCards[card.id] && (
                   <div className="rec-expanded-content">
-                    <p>{loremIpsum}</p>
+                    <p>loremIpsum</p>
                   </div>
                 )}
               </div>
