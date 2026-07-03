@@ -56,7 +56,7 @@ export interface RiskData {
   }[]
 }
 
-async function callHuggingFaceAPI(prompt: string, retries = 3): Promise<string> {
+async function callHuggingFaceAPI(prompt: string, _retries = 3): Promise<string> {
   try {
     console.log('Calling Hugging Face API...')
 

@@ -1,4 +1,4 @@
-    // Mock AI service for demo purposes
+// Mock AI service for demo purposes
 // Generates realistic travel data without API calls
 
 export interface TripData {
@@ -183,7 +183,7 @@ export async function generateRiskPlanning(tripData: TripData): Promise<RiskData
   const temperatures = ['22-28°C', '24-30°C', '20-26°C', '25-32°C', '23-29°C']
   const humidities = ['60%', '65%', '70%', '55%', '68%']
   
-  const weatherForecast = dates.map((date, idx) => ({
+  const weatherForecast = dates.map((_date, idx) => ({
     day: idx + 1,
     condition: weatherConditions[idx % weatherConditions.length],
     temperature: temperatures[idx % temperatures.length],

@@ -203,7 +203,6 @@ function App() {
 
   const loremIpsum = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis tempor nisi in consectetur placerat. Nullam elementum eros non orci vehicula, sed viverra purus mattis. Proin id dolor justo. Vivamus urna odio, tempor eu pellentesque ac, molestie sit amet orci. Proin finibus risus vel justo laoreet, a fermentum lorem gravida. Proin a lorem nisi. Nunc id odio ipsum. Nulla magna nisl, molestie at accumsan sit amet, vehicula eu magna. Nam quis est odio.`
   
-  const dayCardDescription = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque eleifend posuere purus, non semper neque fringilla et. Curabitur luctus cursus scelerisque. Phasellus eu sagittis neque. Praesent pharetra vitae eros non congue. In eleifend blandit lacinia. Nam id dictum lacus. Pellentesque a tempor tellus, ut molestie nibh. Mauris pharetra odio ut justo convallis, vel varius lorem dapibus. Morbi ac justo et justo gravida semper. Nullam bibendum risus venenatis, sollicitudin nunc nec, venenatis est. Mauris lobortis ornare sem vel dignissim. Curabitur in iaculis nibh, non malesuada quam.`
   
   const getTileGradient = (tileId: string): string => {
     const gradients: { [key: string]: string } = {
