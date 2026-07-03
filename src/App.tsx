@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { generateItineraries, generateBudget, generateRiskPlanning } from './services/mockAI'
-import type { TripData, Itinerary, BudgetData, RiskData } from './services/mockAI'
+import { generateItineraries, generateBudget, generateRiskPlanning, generateExploreSpots } from './services/mockAI.ts'
+import type { TripData, Itinerary, BudgetData, RiskData, ExploreSpot } from './services/mockAI.ts'
+import heroBg from './assets/assets.jpg'
 
 const CountUp = ({ end, duration = 2000, suffix = '', prefix = '' }: { end: number, duration?: number, suffix?: string, prefix?: string }) => {
   const [count, setCount] = useState(0)
@@ -127,7 +128,6 @@ function App() {
   const [formData, setFormData] = useState({
     destination: '',
     travelers: '',
-    tripLength: '',
     budget: '',
     startDate: '',
     endDate: ''
@@ -137,6 +137,20 @@ function App() {
   const [itineraries, setItineraries] = useState<Itinerary[]>([])
   const [budgetData, setBudgetData] = useState<BudgetData | null>(null)
   const [riskData, setRiskData] = useState<RiskData | null>(null)
+  const [exploreSpots, setExploreSpots] = useState<ExploreSpot[] | null>(null)
+
+  const getBudgetPercent = (value: unknown, fallback = 0) => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value
+    if (typeof value === 'string') {
+      const parsed = Number.parseFloat(value)
+      return Number.isFinite(parsed) ? parsed : fallback
+    }
+    if (value && typeof value === 'object') {
+      const candidate = value as { percentage?: unknown; amount?: unknown; value?: unknown }
+      return getBudgetPercent(candidate.percentage ?? candidate.amount ?? candidate.value, fallback)
+    }
+    return fallback
+  }
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationProgress, setGenerationProgress] = useState(0)
 
@@ -201,9 +215,6 @@ function App() {
     })
   }
 
-  const loremIpsum = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis tempor nisi in consectetur placerat. Nullam elementum eros non orci vehicula, sed viverra purus mattis. Proin id dolor justo. Vivamus urna odio, tempor eu pellentesque ac, molestie sit amet orci. Proin finibus risus vel justo laoreet, a fermentum lorem gravida. Proin a lorem nisi. Nunc id odio ipsum. Nulla magna nisl, molestie at accumsan sit amet, vehicula eu magna. Nam quis est odio.`
-  
-  
   const getTileGradient = (tileId: string): string => {
     const gradients: { [key: string]: string } = {
       'backwaters': 'linear-gradient(160deg,#2E5C50,#0F221D)',
@@ -222,8 +233,8 @@ function App() {
   }
 
   const handleGenerateItinerary = async () => {
-    if (!formData.destination || !formData.travelers || !formData.tripLength) {
-      alert('Please fill in destination, travelers, and trip length')
+    if (!formData.destination || !formData.travelers || !formData.startDate || !formData.endDate) {
+      alert('Please fill in destination, travelers, start date, and end date')
       return
     }
 
@@ -246,10 +257,15 @@ function App() {
     }, 300)
 
     try {
+      // Calculate trip length from start and end dates
+      const start = formData.startDate ? new Date(formData.startDate) : new Date()
+      const end = formData.endDate ? new Date(formData.endDate) : new Date()
+      const calculatedTripLength = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
+
       const tripData: TripData = {
         destination: formData.destination,
         travelers: parseInt(formData.travelers) || 1,
-        tripLength: parseInt(formData.tripLength) || 3,
+        tripLength: calculatedTripLength,
         budget: formData.budget || '85000',
         interests: selectedChips.length > 0 ? selectedChips : ['General'],
         startDate: formData.startDate || undefined
@@ -262,9 +278,12 @@ function App() {
         generateRiskPlanning(tripData)
       ])
 
+      const generatedExploreSpots = await generateExploreSpots(tripData)
+
       console.log('Generated itineraries:', generatedItineraries)
       console.log('Generated budget:', generatedBudget)
       console.log('Generated risk:', generatedRisk)
+      console.log('Generated explore spots:', generatedExploreSpots)
 
       if (generatedItineraries.length === 0) {
         alert('Failed to generate itineraries. Please check console for errors and try again.')
@@ -273,6 +292,7 @@ function App() {
       setItineraries(generatedItineraries)
       setBudgetData(generatedBudget)
       setRiskData(generatedRisk)
+      setExploreSpots(generatedExploreSpots)
       setGenerationProgress(100)
 
       // Scroll to route section after a short delay
@@ -294,20 +314,11 @@ function App() {
       {/* Route Spine */}
       <div id="spine">
         <svg viewBox="0 0 60 1000" preserveAspectRatio="none">
-          <line x1="30" y1="0" x2="30" y2="1000" stroke="rgba(237,243,234,.18)" strokeWidth="1.5" strokeDasharray="2 7"/>
+          <line x1="30" y1="0" x2="30" y2="1000" stroke="rgba(217,164,65,.15)" strokeWidth="1.5" strokeDasharray="2 7"/>
           <g id="spine-dots">
             {['hero', 'route', 'budget', 'safety', 'stay', 'about', 'contact'].map((id) => {
               const section = document.getElementById(id)
               const y = section ? (section.offsetTop / (document.body.scrollHeight - window.innerHeight)) * 1000 : 0
-              const labels: { [key: string]: string } = {
-                hero: 'Plan',
-                route: 'Route',
-                budget: 'Budget',
-                safety: 'Safety',
-                stay: 'Stay & Eat',
-                about: 'About',
-                contact: 'Contact'
-              }
               return (
                 <g 
                   key={id}
@@ -315,7 +326,6 @@ function App() {
                   onClick={() => scrollToSection(id)}
                 >
                   <circle className="core" cx="30" cy={y} r="5"/>
-                  <text className="spine-label" x="42" y={y + 4}>{labels[id]}</text>
                 </g>
               )
             })}
@@ -343,7 +353,7 @@ function App() {
       </nav>
 
       {/* Hero Section */}
-      <section id="hero" data-spine="Plan">
+      <section id="hero" data-spine="Plan" style={{ '--hero-bg': `url(${heroBg})` } as React.CSSProperties}>
         <svg className="contours" viewBox="0 0 1200 800" preserveAspectRatio="none">
           <path d="M-50,600 Q300,500 600,600 T1250,550" stroke="#5BCBB3" strokeWidth="1" fill="none" opacity=".3"/>
           <path d="M-50,650 Q300,560 600,660 T1250,610" stroke="#5BCBB3" strokeWidth="1" fill="none" opacity=".22"/>
@@ -392,16 +402,6 @@ function App() {
             </div>
             <div className="field-row">
               <div className="field">
-                <label>Trip length</label>
-                <input 
-                  type="number" 
-                  min={1} 
-                  placeholder="Days"
-                  value={formData.tripLength}
-                  onChange={(e) => handleInputChange('tripLength', e.target.value)}
-                />
-              </div>
-              <div className="field">
                 <label>Total budget</label>
                 <input 
                   type="text" 
@@ -431,18 +431,18 @@ function App() {
                   value={customInterestInput}
                   onChange={(e) => setCustomInterestInput(e.target.value)}
                   onKeyPress={handleCustomInterestKeyPress}
-                  style={{flex: 1, fontFamily: 'var(--font-family-nunito)', fontSize: '14px', padding: '8px 12px', border: '1.5px solid rgba(20, 36, 32, 0.14)', borderRadius: '999px', outline: 'none'}}
+                  style={{flex: 1, fontFamily: 'var(--font-family-nunito)', fontSize: '14px', fontWeight: '700', padding: '8px 12px', border: '1.5px solid rgba(20, 36, 32, 0.14)', borderRadius: '999px', outline: 'none'}}
                 />
                 <button 
                   type="button"
                   onClick={addCustomInterest}
-                  style={{fontFamily: 'var(--font-family-nunito)', fontSize: '13px', padding: '8px 16px', background: 'var(--color-ink)', color: 'var(--color-text-light)', border: 'none', borderRadius: '999px', cursor: 'pointer', fontWeight: '600'}}
+                  style={{fontFamily: 'var(--font-family-nunito)', fontSize: '13px', padding: '8px 16px', background: 'var(--color-ink)', color: 'var(--color-text-light)', border: 'none', borderRadius: '999px', cursor: 'pointer', fontWeight: '700'}}
                 >
                   Add
                 </button>
               </div>
             </div>
-            <div className="field-row">
+            <div className="field-row" style={{marginTop: '20px'}}>
               <div className="field">
                 <label>Start date</label>
                 <input 
@@ -533,7 +533,7 @@ function App() {
                   <p style={{marginBottom: '16px', fontSize: '15px'}}>{itin.description}</p>
                   <div style={{marginTop: '20px'}}>
                     <h4 style={{fontFamily: 'var(--font-family-fraunces)', fontSize: '18px', marginBottom: '16px', color: 'var(--color-ink)'}}>Day-wise Schedule</h4>
-                    {itin.days.map((day, idx) => (
+                    {itin.days.map((day: Itinerary['days'][number], idx: number) => (
                       <div key={idx} style={{marginBottom: '16px', padding: '12px', background: 'var(--color-paper-2)', borderRadius: '8px'}}>
                         <div style={{fontFamily: 'var(--font-family-space)', fontSize: '13px', fontWeight: '600', color: 'var(--color-coral)', marginBottom: '8px'}}>
                           DAY {day.day} · {day.date}
@@ -566,98 +566,117 @@ function App() {
           <p className="muted">Set one number for the whole trip. Roamwise splits it across stay, food, transport and activities — then finds where a small shift saves real money.</p>
         </div>
 
-        <div className="budget-wrap">
-          <div className="bars">
-            {budgetData ? (
-              <>
-                <div className="bar-row">
-                  <div className="b-label">Stay</div>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{width: `${budgetData.breakdown.stay}%`}}></div>
-                  </div>
-                  <div className="b-pct">{budgetData.breakdown.stay}%</div>
-                </div>
-                <div className="bar-row">
-                  <div className="b-label">Food</div>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{width: `${budgetData.breakdown.food}%`}}></div>
-                  </div>
-                  <div className="b-pct">{budgetData.breakdown.food}%</div>
-                </div>
-                <div className="bar-row">
-                  <div className="b-label">Transport</div>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{width: `${budgetData.breakdown.transport}%`}}></div>
-                  </div>
-                  <div className="b-pct">{budgetData.breakdown.transport}%</div>
-                </div>
-                <div className="bar-row">
-                  <div className="b-label">Activities</div>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{width: `${budgetData.breakdown.activities}%`}}></div>
-                  </div>
-                  <div className="b-pct">{budgetData.breakdown.activities}%</div>
-                </div>
-                <div className="bar-row">
-                  <div className="b-label">Buffer</div>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{width: `${budgetData.breakdown.buffer}%`}}></div>
-                  </div>
-                  <div className="b-pct">{budgetData.breakdown.buffer}%</div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="bar-row">
-                  <div className="b-label">Stay</div>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{width: '35%'}}></div>
-                  </div>
-                  <div className="b-pct">35%</div>
-                </div>
-                <div className="bar-row">
-                  <div className="b-label">Food</div>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{width: '20%'}}></div>
-                  </div>
-                  <div className="b-pct">20%</div>
-                </div>
-                <div className="bar-row">
-                  <div className="b-label">Transport</div>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{width: '15%'}}></div>
-                  </div>
-                  <div className="b-pct">15%</div>
-                </div>
-                <div className="bar-row">
-                  <div className="b-label">Activities</div>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{width: '20%'}}></div>
-                  </div>
-                  <div className="b-pct">20%</div>
-                </div>
-                <div className="bar-row">
-                  <div className="b-label">Buffer</div>
-                  <div className="bar-track">
-                    <div className="bar-fill" style={{width: '10%'}}></div>
-                  </div>
-                  <div className="b-pct">10%</div>
-                </div>
-              </>
-            )}
+        {isGenerating && (
+          <div className="progress-container">
+            <div className="progress-bar">
+              <div className="progress-fill" style={{width: `${generationProgress}%`}}></div>
+            </div>
+            <div className="progress-text">Analysing budget allocation... {generationProgress}%</div>
           </div>
+        )}
 
-          <div className="budget-card">
-            <div className="eyebrow" style={{color: 'var(--color-muted-light)'}}>Total trip budget</div>
-            <div className="budget-total">₹{budgetData ? budgetData.total.toLocaleString('en-IN') : '85,000'}</div>
-            <div className="budget-meta">
-              {formData.travelers} traveller{formData.travelers !== '1' ? 's' : ''} · {formData.tripLength} days · {formData.destination || 'Kerala, India'}
+        {isGenerating ? (
+          <div className="budget-wrap">
+            <div className="bars">
+              {Array.from({ length: 5 }).map((_, idx) => (
+                <div key={idx} className="skeleton-budget-row">
+                  <div className="skeleton-line short" style={{width: '80px'}}></div>
+                  <div className="skeleton-line long" style={{height: '12px', borderRadius: '999px', flex: 1}}></div>
+                  <div className="skeleton-line short" style={{width: '30px'}}></div>
+                </div>
+              ))}
             </div>
-            <div className="save-callout">
-              💡 {budgetData ? `Budget optimized: Stay ${budgetData.breakdown.stay}%, Food ${budgetData.breakdown.food}%, Transport ${budgetData.breakdown.transport}%, Activities ${budgetData.breakdown.activities}%, Buffer ${budgetData.breakdown.buffer}%` : 'Optimised: shifting two nights to a shoulder-season stay saves roughly 18% without changing your route.'}
+            <div className="budget-card skeleton-card" style={{padding: '30px', border: 'none', boxShadow: 'none'}}>
+              <div className="skeleton-line medium"></div>
+              <div className="skeleton-line short" style={{width: '50%', marginTop: '16px'}}></div>
+              <div className="skeleton-line long" style={{marginTop: '12px'}}></div>
+              <div className="skeleton-line long"></div>
             </div>
           </div>
-        </div>
+        ) : budgetData ? (
+          <div className="budget-wrap">
+            <div className="bars">
+              <>
+                <div className="bar-row">
+                  <div className="b-label">Stay</div>
+                  {(() => {
+                    const stay = getBudgetPercent((budgetData.breakdown as unknown as Record<string, unknown>).stay, 35)
+                    return <>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: `${stay}%`}}></div>
+                  </div>
+                  <div className="b-pct">{stay}%</div>
+                    </>
+                  })()}
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Food</div>
+                  {(() => {
+                    const food = getBudgetPercent((budgetData.breakdown as unknown as Record<string, unknown>).food, 20)
+                    return <>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: `${food}%`}}></div>
+                  </div>
+                  <div className="b-pct">{food}%</div>
+                    </>
+                  })()}
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Transport</div>
+                  {(() => {
+                    const transport = getBudgetPercent((budgetData.breakdown as unknown as Record<string, unknown>).transport, 15)
+                    return <>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: `${transport}%`}}></div>
+                  </div>
+                  <div className="b-pct">{transport}%</div>
+                    </>
+                  })()}
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Activities</div>
+                  {(() => {
+                    const activities = getBudgetPercent((budgetData.breakdown as unknown as Record<string, unknown>).activities, 20)
+                    return <>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: `${activities}%`}}></div>
+                  </div>
+                  <div className="b-pct">{activities}%</div>
+                    </>
+                  })()}
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Buffer</div>
+                  {(() => {
+                    const buffer = getBudgetPercent((budgetData.breakdown as unknown as Record<string, unknown>).buffer, 10)
+                    return <>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: `${buffer}%`}}></div>
+                  </div>
+                  <div className="b-pct">{buffer}%</div>
+                    </>
+                  })()}
+                </div>
+              </>
+            </div>
+
+            <div className="budget-card">
+              <div className="eyebrow" style={{color: 'var(--color-muted-light)'}}>Total trip budget</div>
+              <div className="budget-total">₹{budgetData.total.toLocaleString('en-IN')}</div>
+              <div className="budget-meta">
+                {formData.travelers} traveller{formData.travelers !== '1' ? 's' : ''} · {formData.startDate && formData.endDate ? Math.max(1, Math.ceil((new Date(formData.endDate).getTime() - new Date(formData.startDate).getTime()) / (1000 * 60 * 60 * 24))) + ' days' : '—'} · {formData.destination || 'Kerala, India'}
+              </div>
+              <div className="save-callout">
+                💡 Budget optimized: Stay {getBudgetPercent((budgetData.breakdown as unknown as Record<string, unknown>).stay, 35)}%, Food {getBudgetPercent((budgetData.breakdown as unknown as Record<string, unknown>).food, 20)}%, Transport {getBudgetPercent((budgetData.breakdown as unknown as Record<string, unknown>).transport, 15)}%, Activities {getBudgetPercent((budgetData.breakdown as unknown as Record<string, unknown>).activities, 20)}%, Buffer {getBudgetPercent((budgetData.breakdown as unknown as Record<string, unknown>).buffer, 10)}%
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{textAlign: 'center', padding: '60px 20px', color: 'var(--color-muted-light)'}}>
+            <p style={{fontSize: '18px', marginBottom: '12px'}}>No budget generated yet</p>
+            <p style={{fontSize: '15px'}}>Generate your itinerary first to see the optimised budget breakdown</p>
+          </div>
+        )}
       </section>
 
       {/* Safety Advisor Section */}
@@ -696,14 +715,14 @@ function App() {
               <h3>Weather & Climate</h3>
               <p>Click to see day-wise forecast</p>
               <ul style={{listStyle: 'none', padding: 0, marginTop: '12px'}}>
-                {riskData.weather.slice(0, 2).map((tip, idx) => (
+                {riskData.weather.slice(0, 2).map((tip: string, idx: number) => (
                   <li key={idx} style={{marginBottom: '8px', fontSize: '14px'}}>• {tip}</li>
                 ))}
               </ul>
               {expandedCards['weather-forecast'] && riskData.weatherForecast && (
                 <div style={{marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed rgba(20, 36, 32, 0.12)', animation: 'fadeIn 0.3s ease'}}>
                   <h4 style={{fontFamily: 'var(--font-family-fraunces)', fontSize: '16px', marginBottom: '12px'}}>Day-wise Weather Forecast</h4>
-                  {riskData.weatherForecast.map((forecast, idx) => (
+                  {riskData.weatherForecast.map((forecast: NonNullable<RiskData['weatherForecast']>[number], idx: number) => (
                     <div key={idx} style={{marginBottom: '12px', padding: '10px', background: 'var(--color-paper-2)', borderRadius: '6px', fontSize: '13px'}}>
                       <div style={{fontWeight: '600', color: 'var(--color-coral)', marginBottom: '4px'}}>Day {forecast.day}</div>
                       <div style={{marginBottom: '2px'}}><strong>Condition:</strong> {forecast.condition}</div>
@@ -721,7 +740,7 @@ function App() {
               <h3>Travel Advisories</h3>
               <p>Important safety information:</p>
               <ul style={{listStyle: 'none', padding: 0, marginTop: '12px'}}>
-                {riskData.advisories.map((advisory, idx) => (
+                {riskData.advisories.map((advisory: string, idx: number) => (
                   <li key={idx} style={{marginBottom: '8px', fontSize: '14px'}}>• {advisory}</li>
                 ))}
               </ul>
@@ -730,7 +749,7 @@ function App() {
             <div className="safety-card" style={{gridColumn: 'span 3'}}>
               <h3 style={{marginBottom: '12px'}}>Safety Precautions</h3>
               <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
-                {riskData.safety.map((tip, idx) => (
+                {riskData.safety.map((tip: string, idx: number) => (
                   <div key={idx} style={{fontSize: '14px', padding: '12px', background: 'rgba(91, 203, 179, 0.1)', borderRadius: '8px', border: '1px solid rgba(91, 203, 179, 0.2)'}}>
                     {tip}
                   </div>
@@ -799,7 +818,7 @@ function App() {
                 </div>
                 {expandedCards[card.id] && (
                   <div className="rec-expanded-content">
-                    <p>{loremIpsum}</p>
+                    <p>loremIpsum</p>
                   </div>
                 )}
               </div>
@@ -862,7 +881,9 @@ function App() {
             { id: 'temple', title: 'Temple town, Madurai', bg: 'linear-gradient(160deg,#6B4A7A,#1F1429)', big: false },
             { id: 'mountain', title: 'Mountain trails, Himachal', bg: 'linear-gradient(160deg,#7A5A2A,#2A1E0C)', big: false },
             { id: 'island', title: 'Island hopping, Andaman', bg: 'linear-gradient(160deg,#2A5A7A,#0D1F2A)', big: true }
-          ].map(tile => (
+          ].map((tile, idx) => {
+            const spot = exploreSpots?.[idx]
+            return (
             <div 
               key={tile.id}
               className={`tile ${tile.big ? 'big' : ''} ${expandedCards[tile.id] ? 'expanded' : ''}`}
@@ -871,12 +892,14 @@ function App() {
             >
               {expandedCards[tile.id] && (
                 <div className="tile-expanded-content">
-                  <p>{loremIpsum}</p>
+                  <div className="eyebrow" style={{marginBottom: '10px'}}>{spot?.title || tile.title}</div>
+                  <p>{spot?.description || 'Explore this destination for a fuller local perspective.'}</p>
                 </div>
               )}
-              {!expandedCards[tile.id] && <span>{tile.title}</span>}
+              {!expandedCards[tile.id] && <span>{spot?.title || tile.title}</span>}
             </div>
-          ))}
+            )
+          })}
         </div>
       </section>
 

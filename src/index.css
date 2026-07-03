@@ -166,25 +166,20 @@
   }
   
   .spine-dot circle.core {
-    fill: rgba(237, 243, 234, 0.35);
-    transition: fill 0.35s ease, r 0.35s ease;
+    fill: rgba(217, 164, 65, 0.25);
+    transition: fill 0.35s ease, r 0.35s ease, filter 0.35s ease;
+    r: 4;
+  }
+  
+  .spine-dot:hover circle.core {
+    r: 6;
+    fill: rgba(217, 164, 65, 0.7);
   }
   
   .spine-dot.active circle.core {
     fill: var(--color-gold);
-  }
-  
-  .spine-label {
-    font-family: var(--font-family-space);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    fill: rgba(237, 243, 234, 0.55);
-    text-transform: uppercase;
-    transition: fill 0.3s ease;
-  }
-  
-  .spine-dot.active .spine-label {
-    fill: var(--color-gold);
+    r: 7;
+    filter: drop-shadow(0 0 10px rgba(217, 164, 65, 0.6));
   }
   
   /* Navigation */
@@ -245,10 +240,20 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    position: relative;
+    background: var(--color-ink);
+    overflow: hidden;
+  }
+
+  #hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background: 
       radial-gradient(ellipse at 80% 0%, rgba(91, 203, 179, 0.16), transparent 55%),
-      var(--color-ink);
-    overflow: hidden;
+      var(--hero-bg, transparent) center / cover no-repeat;
+    opacity: 0.2;
+    pointer-events: none;
   }
   
   #hero .contours {
@@ -313,6 +318,7 @@
     position: relative;
     box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.55);
     font-family: var(--font-family-nunito);
+    font-weight: 700;
   }
   
   .ticket::before,
@@ -367,12 +373,14 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-muted-dark);
+    font-weight: 700;
   }
   
   .field select,
   .field input {
     font-family: var(--font-family-nunito);
     font-size: 16px;
+    font-weight: 700;
     color: var(--color-text-dark);
     background: #fff;
     border: 1.5px solid rgba(20, 36, 32, 0.14);
@@ -396,6 +404,7 @@
   .chip {
     font-family: var(--font-family-nunito);
     font-size: 14px;
+    font-weight: 700;
     padding: 8px 14px;
     border-radius: 999px;
     border: 1.5px solid rgba(20, 36, 32, 0.16);
@@ -418,6 +427,7 @@
     font-size: 17px;
     padding: 15px;
     font-family: var(--font-family-nunito);
+    font-weight: 700;
   }
   
   /* Stats Strip */
@@ -591,6 +601,13 @@
     animation: pulse 1.5s ease-in-out infinite;
   }
   
+  .skeleton-budget-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
   .skeleton-line {
     height: 16px;
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
