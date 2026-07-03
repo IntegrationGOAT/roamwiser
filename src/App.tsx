@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { generateItineraries, generateBudget, generateRiskPlanning } from './services/mockAI'
+import type { TripData, Itinerary, BudgetData, RiskData } from './services/mockAI'
 
 const CountUp = ({ end, duration = 2000, suffix = '', prefix = '' }: { end: number, duration?: number, suffix?: string, prefix?: string }) => {
   const [count, setCount] = useState(0)
@@ -120,8 +122,29 @@ function App() {
   const [selectedChips, setSelectedChips] = useState<string[]>([])
   const [activeSection, setActiveSection] = useState<string>('hero')
   const [expandedCards, setExpandedCards] = useState<{ [key: string]: boolean }>({})
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    destination: '',
+    travelers: '',
+    tripLength: '',
+    budget: '',
+    startDate: '',
+    endDate: ''
+  })
+  
+  // Generated data state
+  const [itineraries, setItineraries] = useState<Itinerary[]>([])
+  const [budgetData, setBudgetData] = useState<BudgetData | null>(null)
+  const [riskData, setRiskData] = useState<RiskData | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationProgress, setGenerationProgress] = useState(0)
 
-  const interests = ['Adventure', 'Food', 'Nature', 'Culture', 'Nightlife', 'Wellness']
+  const defaultInterests = ['Adventure', 'Food', 'Nature', 'Culture', 'Nightlife']
+  const [customInterests, setCustomInterests] = useState<string[]>([])
+  const [customInterestInput, setCustomInterestInput] = useState('')
+  
+  const interests = [...defaultInterests, ...customInterests]
 
   const toggleChip = (chip: string) => {
     setSelectedChips(prev => 
@@ -129,6 +152,20 @@ function App() {
         ? prev.filter(c => c !== chip)
         : [...prev, chip]
     )
+  }
+
+  const addCustomInterest = () => {
+    if (customInterestInput.trim() && !customInterests.includes(customInterestInput.trim())) {
+      setCustomInterests(prev => [...prev, customInterestInput.trim()])
+      setCustomInterestInput('')
+    }
+  }
+
+  const handleCustomInterestKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      addCustomInterest()
+    }
   }
 
   useEffect(() => {
@@ -154,13 +191,18 @@ function App() {
   }
 
   const toggleCard = (cardId: string) => {
-    setExpandedCards(prev => ({
-      ...prev,
-      [cardId]: !prev[cardId]
-    }))
+    setExpandedCards(prev => {
+      // If clicking on already expanded card, collapse it
+      if (prev[cardId]) {
+        return {}
+      }
+      // Otherwise, expand only this card (collapse all others)
+      return { [cardId]: true }
+    })
   }
 
   const loremIpsum = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis tempor nisi in consectetur placerat. Nullam elementum eros non orci vehicula, sed viverra purus mattis. Proin id dolor justo. Vivamus urna odio, tempor eu pellentesque ac, molestie sit amet orci. Proin finibus risus vel justo laoreet, a fermentum lorem gravida. Proin a lorem nisi. Nunc id odio ipsum. Nulla magna nisl, molestie at accumsan sit amet, vehicula eu magna. Nam quis est odio.`
+  
   
   const getTileGradient = (tileId: string): string => {
     const gradients: { [key: string]: string } = {
@@ -173,6 +215,78 @@ function App() {
       'island': 'linear-gradient(160deg,#2A5A7A,#0D1F2A)'
     }
     return gradients[tileId] || 'linear-gradient(160deg,#2E5C50,#0F221D)'
+  }
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleGenerateItinerary = async () => {
+    if (!formData.destination || !formData.travelers || !formData.tripLength) {
+      alert('Please fill in destination, travelers, and trip length')
+      return
+    }
+
+    // Set generating state first
+    setIsGenerating(true)
+    setGenerationProgress(0)
+    
+    // Force UI update before starting generation
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setGenerationProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval)
+          return 90
+        }
+        return prev + 10
+      })
+    }, 300)
+
+    try {
+      const tripData: TripData = {
+        destination: formData.destination,
+        travelers: parseInt(formData.travelers) || 1,
+        tripLength: parseInt(formData.tripLength) || 3,
+        budget: formData.budget || '85000',
+        interests: selectedChips.length > 0 ? selectedChips : ['General'],
+        startDate: formData.startDate || undefined
+      }
+
+      // Generate all data in parallel
+      const [generatedItineraries, generatedBudget, generatedRisk] = await Promise.all([
+        generateItineraries(tripData),
+        generateBudget(tripData),
+        generateRiskPlanning(tripData)
+      ])
+
+      console.log('Generated itineraries:', generatedItineraries)
+      console.log('Generated budget:', generatedBudget)
+      console.log('Generated risk:', generatedRisk)
+
+      if (generatedItineraries.length === 0) {
+        alert('Failed to generate itineraries. Please check console for errors and try again.')
+      }
+
+      setItineraries(generatedItineraries)
+      setBudgetData(generatedBudget)
+      setRiskData(generatedRisk)
+      setGenerationProgress(100)
+
+      // Scroll to route section after a short delay
+      setTimeout(() => scrollToSection('route'), 600)
+    } catch (error) {
+      console.error('Error generating trip data:', error)
+      alert('Failed to generate itinerary. Please try again.')
+    } finally {
+      clearInterval(progressInterval)
+      setTimeout(() => {
+        setIsGenerating(false)
+        setGenerationProgress(0)
+      }, 600)
+    }
   }
 
   return (
@@ -238,7 +352,7 @@ function App() {
         
         <div className="hero-grid">
           <div>
-            <div className="eyebrow hero-eyebrow">AI itinerary planning · budget optimiser · live safety alerts</div>
+            <div className="eyebrow hero-eyebrow"> itinerary planning · budget optimiser · live safety alerts</div>
             <h1 className="display">Plan the trip.<br />Skip the <em>guesswork</em>.</h1>
             <p className="hero-sub">Tell Roamwise your budget, your people, your days and what you're into. We build the day-by-day route, optimise the spend, and watch the road ahead for weather and safety so you don't have to.</p>
             <div className="hero-ctas">
@@ -254,26 +368,47 @@ function App() {
           <div className="ticket" id="plan">
             <div className="ticket-top">
               <div className="eyebrow">Trip builder</div>
-              <div className="eyebrow" style={{color: 'var(--color-muted-dark)'}}>01 / RM</div>
             </div>
             <div className="field-row">
               <div className="field">
                 <label>Destination</label>
-                <input type="text" placeholder="e.g. Kerala, India"/>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Kerala, India"
+                  value={formData.destination}
+                  onChange={(e) => handleInputChange('destination', e.target.value)}
+                />
               </div>
               <div className="field">
                 <label>Travellers</label>
-                <input type="number" min={1} placeholder="1"/>
+                <input 
+                  type="number" 
+                  min={1} 
+                  placeholder="1"
+                  value={formData.travelers}
+                  onChange={(e) => handleInputChange('travelers', e.target.value)}
+                />
               </div>
             </div>
             <div className="field-row">
               <div className="field">
                 <label>Trip length</label>
-                <input type="number" min={1} placeholder="Days"/>
+                <input 
+                  type="number" 
+                  min={1} 
+                  placeholder="Days"
+                  value={formData.tripLength}
+                  onChange={(e) => handleInputChange('tripLength', e.target.value)}
+                />
               </div>
               <div className="field">
                 <label>Total budget</label>
-                <input type="text" placeholder="e.g. ₹85,000"/>
+                <input 
+                  type="text" 
+                  placeholder="e.g. ₹85,000"
+                  value={formData.budget}
+                  onChange={(e) => handleInputChange('budget', e.target.value)}
+                />
               </div>
             </div>
             <div className="field">
@@ -289,18 +424,49 @@ function App() {
                   </div>
                 ))}
               </div>
+              <div style={{display: 'flex', gap: '8px', marginTop: '10px'}}>
+                <input 
+                  type="text" 
+                  placeholder="Add custom interest..."
+                  value={customInterestInput}
+                  onChange={(e) => setCustomInterestInput(e.target.value)}
+                  onKeyPress={handleCustomInterestKeyPress}
+                  style={{flex: 1, fontFamily: 'var(--font-family-nunito)', fontSize: '14px', padding: '8px 12px', border: '1.5px solid rgba(20, 36, 32, 0.14)', borderRadius: '999px', outline: 'none'}}
+                />
+                <button 
+                  type="button"
+                  onClick={addCustomInterest}
+                  style={{fontFamily: 'var(--font-family-nunito)', fontSize: '13px', padding: '8px 16px', background: 'var(--color-ink)', color: 'var(--color-text-light)', border: 'none', borderRadius: '999px', cursor: 'pointer', fontWeight: '600'}}
+                >
+                  Add
+                </button>
+              </div>
             </div>
             <div className="field-row">
               <div className="field">
                 <label>Start date</label>
-                <input type="date" />
+                <input 
+                  type="date" 
+                  value={formData.startDate}
+                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                />
               </div>
               <div className="field">
                 <label>End date</label>
-                <input type="date" />
+                <input 
+                  type="date" 
+                  value={formData.endDate}
+                  onChange={(e) => handleInputChange('endDate', e.target.value)}
+                />
               </div>
             </div>
-            <button className="btn btn-gold ticket-cta">Generate my itinerary →</button>
+            <button 
+              className="btn btn-gold ticket-cta" 
+              onClick={handleGenerateItinerary}
+              disabled={isGenerating}
+            >
+              {isGenerating ? 'Generating...' : 'Generate my itinerary →'}
+            </button>
           </div>
         </div>
 
@@ -332,78 +498,63 @@ function App() {
           <p className="muted">Every itinerary is built around your interests and travel pace — mornings for the must-sees, afternoons for the thing you actually came for, evenings to slow down.</p>
         </div>
         
+        {isGenerating && (
+          <div className="progress-container">
+            <div className="progress-bar">
+              <div className="progress-fill" style={{width: `${generationProgress}%`}}></div>
+            </div>
+            <div className="progress-text">Generating your personalized itineraries... {generationProgress}%</div>
+          </div>
+        )}
+        
         <div className="days">
-          <div className="day-card">
-            <div className="day-num">DAY 01</div>
-            <div className="day-title">Arrival & Old Town</div>
-            <div className="slot">
-              <span className="tag">Morning</span>
-              <span>Land, check into homestay, walk the backwaters promenade</span>
+          {isGenerating ? (
+            Array.from({ length: 4 }).map((_, idx) => (
+              <div key={idx} className="skeleton-card">
+                <div className="skeleton-line short"></div>
+                <div className="skeleton-line medium"></div>
+                <div className="skeleton-line long"></div>
+                <div className="skeleton-line medium"></div>
+              </div>
+            ))
+          ) : itineraries.length > 0 ? itineraries.map(itin => (
+            <div 
+              key={itin.id}
+              className={`day-card ${expandedCards[itin.id] ? 'expanded' : ''}`}
+              onClick={() => toggleCard(itin.id)}
+            >
+              <div className="day-num">{itin.num}</div>
+              <div className="day-title">{itin.title}</div>
+              <div className="slot">
+                <span>{itin.description.substring(0, 120)}...</span>
+              </div>
+              {expandedCards[itin.id] && itin.days && (
+                <div className="day-expanded-content">
+                  <p style={{marginBottom: '16px', fontSize: '15px'}}>{itin.description}</p>
+                  <div style={{marginTop: '20px'}}>
+                    <h4 style={{fontFamily: 'var(--font-family-fraunces)', fontSize: '18px', marginBottom: '16px', color: 'var(--color-ink)'}}>Day-wise Schedule</h4>
+                    {itin.days.map((day, idx) => (
+                      <div key={idx} style={{marginBottom: '16px', padding: '12px', background: 'var(--color-paper-2)', borderRadius: '8px'}}>
+                        <div style={{fontFamily: 'var(--font-family-space)', fontSize: '13px', fontWeight: '600', color: 'var(--color-coral)', marginBottom: '8px'}}>
+                          DAY {day.day} · {day.date}
+                        </div>
+                        <div style={{fontSize: '14px', lineHeight: '1.6'}}>
+                          <div style={{marginBottom: '4px'}}><strong>Morning:</strong> {day.morning}</div>
+                          <div style={{marginBottom: '4px'}}><strong>Afternoon:</strong> {day.afternoon}</div>
+                          <div><strong>Evening:</strong> {day.evening}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="slot">
-                <span className="tag">Afternoon</span>
-              <span>Spice market food trail with a local guide</span>
+          )) : (
+            <div style={{textAlign: 'center', padding: '60px 20px', color: 'var(--color-muted-dark)'}}>
+              <p style={{fontSize: '18px', marginBottom: '12px'}}>No itineraries generated yet</p>
+              <p style={{fontSize: '15px'}}>Fill in your trip details and click "Generate my itinerary" to see your personalized travel plans</p>
             </div>
-            <div className="slot">
-              <span className="tag">Evening</span>
-              <span>Sunset houseboat, light dinner onboard</span>
-            </div>
-            <div className="day-cost">Est. ₹3,200 / person</div>
-          </div>
-
-          <div className="day-card">
-            <div className="day-num">DAY 02</div>
-            <div className="day-title">Adventure Trek</div>
-            <div className="slot">
-              <span className="tag">Morning</span>
-              <span>Guided trek to the tea-hill viewpoint</span>
-            </div>
-            <div className="slot">
-              <span className="tag">Afternoon</span>
-              <span>River rafting, grade II — beginner friendly</span>
-            </div>
-            <div className="slot">
-              <span className="tag">Evening</span>
-              <span>Bonfire & regional folk performance</span>
-            </div>
-            <div className="day-cost">Est. ₹4,600 / person</div>
-          </div>
-
-          <div className="day-card">
-            <div className="day-num">DAY 03</div>
-            <div className="day-title">Nature & Wildlife</div>
-            <div className="slot">
-              <span className="tag">Morning</span>
-              <span>Sanctuary boat safari, sightings likely at dawn</span>
-            </div>
-            <div className="slot">
-              <span className="tag">Afternoon</span>
-              <span>Rest at stay — pool & ayurveda massage</span>
-            </div>
-            <div className="slot">
-              <span className="tag">Evening</span>
-              <span>Rooftop dinner, live weather check for tomorrow</span>
-            </div>
-            <div className="day-cost">Est. ₹3,900 / person</div>
-          </div>
-
-          <div className="day-card">
-            <div className="day-num">DAY 04</div>
-            <div className="day-title">Culture & Departure</div>
-            <div className="slot">
-              <span className="tag">Morning</span>
-              <span>Heritage fort walk & local craft workshop</span>
-            </div>
-            <div className="slot">
-              <span className="tag">Afternoon</span>
-              <span>Last food trail stop, pack & checkout</span>
-            </div>
-            <div className="slot">
-              <span className="tag">Evening</span>
-              <span>Transfer to airport, buffer built in</span>
-            </div>
-            <div className="day-cost">Est. ₹2,400 / person</div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -417,49 +568,93 @@ function App() {
 
         <div className="budget-wrap">
           <div className="bars">
-            <div className="bar-row">
-              <div className="b-label">Stay</div>
-              <div className="bar-track">
-                <div className="bar-fill" style={{width: '35%'}}></div>
-              </div>
-              <div className="b-pct">35%</div>
-            </div>
-            <div className="bar-row">
-              <div className="b-label">Food</div>
-              <div className="bar-track">
-                <div className="bar-fill" style={{width: '20%'}}></div>
-              </div>
-              <div className="b-pct">20%</div>
-            </div>
-            <div className="bar-row">
-              <div className="b-label">Transport</div>
-              <div className="bar-track">
-                <div className="bar-fill" style={{width: '15%'}}></div>
-              </div>
-              <div className="b-pct">15%</div>
-            </div>
-            <div className="bar-row">
-              <div className="b-label">Activities</div>
-              <div className="bar-track">
-                <div className="bar-fill" style={{width: '20%'}}></div>
-              </div>
-              <div className="b-pct">20%</div>
-            </div>
-            <div className="bar-row">
-              <div className="b-label">Buffer</div>
-              <div className="bar-track">
-                <div className="bar-fill" style={{width: '10%'}}></div>
-              </div>
-              <div className="b-pct">10%</div>
-            </div>
+            {budgetData ? (
+              <>
+                <div className="bar-row">
+                  <div className="b-label">Stay</div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: `${budgetData.breakdown.stay}%`}}></div>
+                  </div>
+                  <div className="b-pct">{budgetData.breakdown.stay}%</div>
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Food</div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: `${budgetData.breakdown.food}%`}}></div>
+                  </div>
+                  <div className="b-pct">{budgetData.breakdown.food}%</div>
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Transport</div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: `${budgetData.breakdown.transport}%`}}></div>
+                  </div>
+                  <div className="b-pct">{budgetData.breakdown.transport}%</div>
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Activities</div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: `${budgetData.breakdown.activities}%`}}></div>
+                  </div>
+                  <div className="b-pct">{budgetData.breakdown.activities}%</div>
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Buffer</div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: `${budgetData.breakdown.buffer}%`}}></div>
+                  </div>
+                  <div className="b-pct">{budgetData.breakdown.buffer}%</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bar-row">
+                  <div className="b-label">Stay</div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: '35%'}}></div>
+                  </div>
+                  <div className="b-pct">35%</div>
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Food</div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: '20%'}}></div>
+                  </div>
+                  <div className="b-pct">20%</div>
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Transport</div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: '15%'}}></div>
+                  </div>
+                  <div className="b-pct">15%</div>
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Activities</div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: '20%'}}></div>
+                  </div>
+                  <div className="b-pct">20%</div>
+                </div>
+                <div className="bar-row">
+                  <div className="b-label">Buffer</div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{width: '10%'}}></div>
+                  </div>
+                  <div className="b-pct">10%</div>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="budget-card">
             <div className="eyebrow" style={{color: 'var(--color-muted-light)'}}>Total trip budget</div>
-            <div className="budget-total">₹85,000</div>
-            <div className="budget-meta">4 travellers · 6 days · Kerala, India</div>
+            <div className="budget-total">₹{budgetData ? budgetData.total.toLocaleString('en-IN') : '85,000'}</div>
+            <div className="budget-meta">
+              {formData.travelers} traveller{formData.travelers !== '1' ? 's' : ''} · {formData.tripLength} days · {formData.destination || 'Kerala, India'}
+            </div>
             <div className="save-callout">
-              💡 Optimised: shifting two nights to a shoulder-season stay saves roughly <strong>18%</strong> without changing your route.
+              💡 {budgetData ? `Budget optimized: Stay ${budgetData.breakdown.stay}%, Food ${budgetData.breakdown.food}%, Transport ${budgetData.breakdown.transport}%, Activities ${budgetData.breakdown.activities}%, Buffer ${budgetData.breakdown.buffer}%` : 'Optimised: shifting two nights to a shoulder-season stay saves roughly 18% without changing your route.'}
             </div>
           </div>
         </div>
@@ -473,28 +668,100 @@ function App() {
           <p className="muted">Safe-zone mapping, live weather flags and government advisories, layered directly onto your route.</p>
         </div>
 
-        <div className="safety-grid">
-          <div className="safety-card">
-            <ShieldIcon />
-            <h3>Safe-zone mapping</h3>
-            <p>Areas rated by local safety data, lit up on your route so you know where to walk after dark.</p>
-            <div className="badge green">Old Town — low risk</div>
-          </div>
+        {riskData ? (
+          <div className="safety-grid">
+            <div className="safety-card">
+              <ShieldIcon />
+              <h3>Overall Risk Assessment</h3>
+              <p>{riskData.overall}</p>
+              <div className={`badge ${riskData.level === 'Low' ? 'green' : riskData.level === 'Medium' ? 'amber' : 'green'}`}>
+                Risk Level: {riskData.level}
+              </div>
+            </div>
 
-          <div className="safety-card">
-            <WeatherIcon />
-            <h3>Weather alerts</h3>
-            <p>Real-time flags mapped to your itinerary, with a same-day indoor alternative when needed.</p>
-            <div className="badge amber">Day 3 — heavy rain expected</div>
-          </div>
+            <div 
+              className="safety-card" 
+              style={{cursor: 'pointer', transition: 'all 0.3s ease'}}
+              onClick={() => toggleCard('weather-forecast')}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)'
+                e.currentTarget.style.boxShadow = '0 16px 40px -15px rgba(20, 36, 32, 0.3)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = '0 12px 30px -18px rgba(20, 36, 32, 0.2)'
+              }}
+            >
+              <WeatherIcon />
+              <h3>Weather & Climate</h3>
+              <p>Click to see day-wise forecast</p>
+              <ul style={{listStyle: 'none', padding: 0, marginTop: '12px'}}>
+                {riskData.weather.slice(0, 2).map((tip, idx) => (
+                  <li key={idx} style={{marginBottom: '8px', fontSize: '14px'}}>• {tip}</li>
+                ))}
+              </ul>
+              {expandedCards['weather-forecast'] && riskData.weatherForecast && (
+                <div style={{marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed rgba(20, 36, 32, 0.12)', animation: 'fadeIn 0.3s ease'}}>
+                  <h4 style={{fontFamily: 'var(--font-family-fraunces)', fontSize: '16px', marginBottom: '12px'}}>Day-wise Weather Forecast</h4>
+                  {riskData.weatherForecast.map((forecast, idx) => (
+                    <div key={idx} style={{marginBottom: '12px', padding: '10px', background: 'var(--color-paper-2)', borderRadius: '6px', fontSize: '13px'}}>
+                      <div style={{fontWeight: '600', color: 'var(--color-coral)', marginBottom: '4px'}}>Day {forecast.day}</div>
+                      <div style={{marginBottom: '2px'}}><strong>Condition:</strong> {forecast.condition}</div>
+                      <div style={{marginBottom: '2px'}}><strong>Temp:</strong> {forecast.temperature}</div>
+                      <div style={{marginBottom: '2px'}}><strong>Humidity:</strong> {forecast.humidity}</div>
+                      <div style={{marginTop: '4px', fontStyle: 'italic'}}>💡 {forecast.recommendation}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-          <div className="safety-card">
-            <AlertIcon />
-            <h3>Government advisories</h3>
-            <p>Official travel-advisory levels pulled in and translated into plain-language guidance.</p>
-            <div className="badge green">Level 1 — normal precautions</div>
+            <div className="safety-card">
+              <AlertIcon />
+              <h3>Travel Advisories</h3>
+              <p>Important safety information:</p>
+              <ul style={{listStyle: 'none', padding: 0, marginTop: '12px'}}>
+                {riskData.advisories.map((advisory, idx) => (
+                  <li key={idx} style={{marginBottom: '8px', fontSize: '14px'}}>• {advisory}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="safety-card" style={{gridColumn: 'span 3'}}>
+              <h3 style={{marginBottom: '12px'}}>Safety Precautions</h3>
+              <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'}}>
+                {riskData.safety.map((tip, idx) => (
+                  <div key={idx} style={{fontSize: '14px', padding: '12px', background: 'rgba(91, 203, 179, 0.1)', borderRadius: '8px', border: '1px solid rgba(91, 203, 179, 0.2)'}}>
+                    {tip}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="safety-grid">
+            <div className="safety-card">
+              <ShieldIcon />
+              <h3>Safe-zone mapping</h3>
+              <p>Areas rated by local safety data, lit up on your route so you know where to walk after dark.</p>
+              <div className="badge green">Old Town — low risk</div>
+            </div>
+
+            <div className="safety-card">
+              <WeatherIcon />
+              <h3>Weather alerts</h3>
+              <p>Real-time flags mapped to your itinerary, with a same-day indoor alternative when needed.</p>
+              <div className="badge amber">Day 3 — heavy rain expected</div>
+            </div>
+
+            <div className="safety-card">
+              <AlertIcon />
+              <h3>Government advisories</h3>
+              <p>Official travel-advisory levels pulled in and translated into plain-language guidance.</p>
+              <div className="badge green">Level 1 — normal precautions</div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Stay & Eat Section */}

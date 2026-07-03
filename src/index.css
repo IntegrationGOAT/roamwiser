@@ -15,9 +15,10 @@
   --color-muted-light: #B9CBC3;
   --radius-radius: 14px;
   
-  --font-family-fraunces: 'Fraunces', serif;
-  --font-family-inter: 'Inter', sans-serif;
-  --font-family-space: 'Space Grotesk', monospace;
+  --font-family-fraunces: 'Montserrat', sans-serif;
+  --font-family-inter: 'Montserrat', sans-serif;
+  --font-family-space: 'Montserrat', sans-serif;
+  --font-family-nunito: 'Nunito', sans-serif;
 }
 
 @layer base {
@@ -311,6 +312,7 @@
     padding: 34px 30px 28px;
     position: relative;
     box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.55);
+    font-family: var(--font-family-nunito);
   }
   
   .ticket::before,
@@ -360,7 +362,7 @@
   }
   
   .field label {
-    font-family: var(--font-family-space);
+    font-family: var(--font-family-nunito);
     font-size: 12px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -369,7 +371,7 @@
   
   .field select,
   .field input {
-    font-family: var(--font-family-inter);
+    font-family: var(--font-family-nunito);
     font-size: 16px;
     color: var(--color-text-dark);
     background: #fff;
@@ -392,7 +394,7 @@
   }
   
   .chip {
-    font-family: var(--font-family-space);
+    font-family: var(--font-family-nunito);
     font-size: 14px;
     padding: 8px 14px;
     border-radius: 999px;
@@ -415,6 +417,7 @@
     margin-top: 20px;
     font-size: 17px;
     padding: 15px;
+    font-family: var(--font-family-nunito);
   }
   
   /* Stats Strip */
@@ -500,8 +503,25 @@
     background: #fff;
     border-radius: var(--radius-radius);
     padding: 22px 20px;
-    border: 1px solid rgba(20, 36, 32, 0.08);
+    border: 2px solid var(--color-teal-line);
     box-shadow: 0 12px 30px -18px rgba(20, 36, 32, 0.25);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .day-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px -15px rgba(20, 36, 32, 0.3);
+    border-color: var(--color-gold);
+  }
+  
+  .day-card.expanded {
+    border-color: var(--color-coral);
+    box-shadow: 0 20px 50px -15px rgba(20, 36, 32, 0.4);
+    grid-column: span 2;
+    grid-row: span 2;
+    z-index: 10;
   }
   
   .day-num {
@@ -546,6 +566,97 @@
     padding: 6px 12px;
     border-radius: 999px;
     color: var(--color-text-dark);
+  }
+  
+  .day-expanded-content {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(20, 36, 32, 0.12);
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .day-expanded-content p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-text-dark);
+  }
+  
+  /* Skeleton Loading */
+  .skeleton-card {
+    background: #fff;
+    border-radius: var(--radius-radius);
+    padding: 22px 20px;
+    border: 2px solid var(--color-teal-line);
+    box-shadow: 0 12px 30px -18px rgba(20, 36, 32, 0.25);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  
+  .skeleton-line {
+    height: 16px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  
+  .skeleton-line.short {
+    width: 60%;
+  }
+  
+  .skeleton-line.medium {
+    width: 80%;
+  }
+  
+  .skeleton-line.long {
+    width: 100%;
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+  
+  .progress-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 40px auto;
+    text-align: center;
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(20, 36, 32, 0.1);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-teal-line), var(--color-gold));
+    border-radius: 999px;
+    transition: width 0.3s ease;
+  }
+  
+  .progress-text {
+    font-family: var(--font-family-nunito);
+    font-size: 14px;
+    color: var(--color-muted-dark);
   }
   
   /* Budget */
@@ -652,6 +763,12 @@
     padding: 26px 24px;
     border: 1px solid rgba(20, 36, 32, 0.08);
     box-shadow: 0 12px 30px -18px rgba(20, 36, 32, 0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .safety-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px -15px rgba(20, 36, 32, 0.3);
   }
   
   .safety-icon {
