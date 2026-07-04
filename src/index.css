@@ -3,6 +3,7 @@
 @import "./styles/hero.css";
 @import "./styles/sections.css";
 @import "./styles/mobile.css";
+@import "./styles/ai-chat.css";
 
 @theme {
   --color-ink: #10241F;

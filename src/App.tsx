@@ -11,6 +11,7 @@ import { TranslationSection } from './components/TranslationSection'
 import { GallerySection } from './components/GallerySection'
 import { AboutSection } from './components/AboutSection'
 import { ContactSection } from './components/ContactSection'
+import { AIChatWidget } from './components/AIChatWidget'
 
 function App() {
   const [selectedChips, setSelectedChips] = useState<string[]>([])
@@ -256,6 +257,9 @@ function App() {
 
       {/* Contact Section */}
       <ContactSection />
+
+      {/* AI Chat Widget */}
+      <AIChatWidget />
 
       {/* Footer */}
       <footer>
