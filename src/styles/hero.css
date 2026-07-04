@@ -185,6 +185,37 @@ h1.display em {
   border-color: var(--color-ink);
 }
 
+.custom-interest-input {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: stretch;
+}
+
+.custom-interest-input input {
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-interest-input button {
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-family-nunito);
+  background: var(--color-ink);
+  color: var(--color-text-light);
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.custom-interest-input button:hover {
+  background: var(--color-coral);
+}
+
 .ticket-cta {
   width: 100%;
   justify-content: center;
