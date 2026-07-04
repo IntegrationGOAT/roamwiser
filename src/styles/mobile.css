@@ -1,0 +1,433 @@
+/* ===== GLOBAL MOBILE RESET ===== */
+@media (max-width: 760px) {
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* ===== PREVENT HORIZONTAL SCROLL ===== */
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* ===== BASE SPACING ===== */
+  section {
+    padding: 30px 3vw;
+  }
+  
+  /* ===== OVERRIDE ALL INLINE STYLES ===== */
+  
+  /* Force all elements to respect mobile layout */
+  [style*="display: flex"],
+  [style*="display:flex"] {
+    flex-direction: column !important;
+  }
+  
+  /* Override grid inline styles */
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  [style*="gridColumn"] {
+    grid-column: span 1 !important;
+  }
+  
+  /* Override width constraints */
+  [style*="max-width"] {
+    max-width: 100% !important;
+  }
+  
+  /* Override fixed widths */
+  [style*="width:"] {
+    max-width: 100% !important;
+  }
+  
+  /* Ensure all containers are full width */
+  div[style*="padding"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  /* Override margin constraints */
+  [style*="marginTop"],
+  [style*="margin-top"] {
+    margin-top: 0 !important;
+  }
+  
+  [style*="marginBottom"],
+  [style*="margin-bottom"] {
+    margin-bottom: 0 !important;
+  }
+  
+  /* Force all text elements to full width */
+  p[style*="max-width"],
+  div[style*="max-width"] {
+    max-width: 100% !important;
+  }
+  
+  /* Override font sizes */
+  [style*="fontSize"] {
+    font-size: inherit !important;
+  }
+  
+  /* Override padding */
+  [style*="padding:"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  /* Override text alignment */
+  [style*="textAlign: center"] {
+    text-align: center !important;
+  }
+  
+  /* Override flex properties */
+  [style*="flex:"] {
+    flex: 1 1 100% !important;
+  }
+  
+  /* Override gap */
+  [style*="gap:"] {
+    gap: 8px !important;
+  }
+  
+  /* Override border radius */
+  [style*="borderRadius"] {
+    border-radius: 8px !important;
+  }
+  
+  /* Override box shadow */
+  [style*="boxShadow"] {
+    box-shadow: none !important;
+  }
+  
+  /* Override transform */
+  [style*="transform"] {
+    transform: none !important;
+  }
+  
+  /* Override cursor */
+  [style*="cursor"] {
+    cursor: pointer !important;
+  }
+  
+  /* Override transition */
+  [style*="transition"] {
+    transition: none !important;
+  }
+  
+  /* Override position */
+  [style*="position"] {
+    position: static !important;
+  }
+  
+  /* Override list styles */
+  ul[style*="listStyle"] {
+    list-style: none !important;
+    padding: 0 !important;
+  }
+  
+  /* Override strong/bold text */
+  strong, b {
+    font-weight: 600 !important;
+  }
+  
+  /* ===== SECTION HEADERS ===== */
+  .sec-head {
+    margin-bottom: 20px;
+    max-width: 100% !important;
+  }
+  
+  .sec-head .eyebrow {
+    font-size: 9px;
+    margin-bottom: 6px;
+  }
+  
+  .sec-head h2 {
+    font-size: clamp(20px, 5vw, 26px);
+    line-height: 1.15;
+  }
+  
+  .sec-head p {
+    font-size: 13px;
+    margin-top: 8px;
+    max-width: 100% !important;
+    line-height: 1.4;
+  }
+  
+  /* ===== DAY CARDS ===== */
+  .days {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .day-card {
+    padding: 12px;
+    border-radius: 8px;
+    border-width: 1px;
+  }
+  
+  .day-title {
+    font-size: 15px;
+    margin: 2px 0 8px;
+  }
+  
+  .slot {
+    font-size: 12px;
+    padding: 4px 0;
+  }
+  
+  /* ===== BUDGET SECTION ===== */
+  .budget-wrap {
+    gap: 20px;
+  }
+  
+  .bars {
+    gap: 8px;
+  }
+  
+  .bar-row {
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  
+  .bar-row .b-label {
+    width: 55px;
+    font-size: 10px;
+  }
+  
+  .bar-track {
+    height: 6px;
+  }
+  
+  .bar-row .b-pct {
+    width: 24px;
+    font-size: 10px;
+  }
+  
+  .budget-card {
+    padding: 16px;
+    border-radius: 8px;
+  }
+  
+  .budget-total {
+    font-size: 24px;
+  }
+  
+  .budget-meta {
+    font-size: 11px;
+  }
+  
+  .save-callout {
+    font-size: 11px;
+    padding: 8px;
+    margin-top: 12px;
+  }
+  
+  /* ===== SAFETY CARDS ===== */
+  .safety-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .safety-card {
+    padding: 14px;
+    border-radius: 8px;
+  }
+  
+  .safety-icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 8px;
+  }
+  
+  .safety-card h3 {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  
+  .safety-card p {
+    font-size: 12px;
+  }
+  
+  .safety-card[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* ===== STAY & EAT CARDS ===== */
+  .cards-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .rec-card {
+    border-radius: 8px;
+  }
+  
+  .rec-photo {
+    height: 90px;
+  }
+  
+  .rec-body {
+    padding: 10px;
+  }
+  
+  .rec-title {
+    font-size: 14px;
+  }
+  
+  /* ===== GALLERY ===== */
+  .gallery {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 120px;
+    gap: 6px;
+  }
+  
+  .tile.big {
+    grid-row: span 1;
+  }
+  
+  .gallery .tile {
+    border-radius: 6px;
+    padding: 8px;
+  }
+  
+  .gallery .tile span {
+    font-size: 12px;
+  }
+  
+  /* ===== TRANSLATION ===== */
+  .translate-wrap {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .chat-mock {
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  .bubble {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  
+  /* ===== ABOUT SECTION ===== */
+  .about-wrap {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .about-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+  
+  .about-stat .num {
+    font-size: 20px;
+  }
+  
+  .about-stat .lbl {
+    font-size: 10px;
+  }
+  
+  /* ===== CONTACT SECTION ===== */
+  .contact-wrap {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .cform input,
+  .cform textarea {
+    font-size: 16px;
+    padding: 10px;
+    min-height: 40px;
+    border-radius: 6px;
+  }
+  
+  .cform textarea {
+    min-height: 80px;
+  }
+  
+  .cinfo-row {
+    margin-bottom: 12px;
+  }
+  
+  .cinfo-row .v {
+    font-size: 13px;
+  }
+  
+  /* ===== BUTTONS ===== */
+  .btn {
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 13px;
+    border-radius: 999px;
+  }
+  
+  /* ===== REMOVE HOVER EFFECTS ===== */
+  .day-card:hover,
+  .safety-card:hover,
+  .rec-card:hover,
+  .gallery .tile:hover,
+  .tile:hover {
+    transform: none;
+    box-shadow: inherit;
+  }
+  
+  /* ===== NAVIGATION ===== */
+  nav {
+    padding: 12px 3vw;
+  }
+  
+  .logo {
+    font-size: 16px;
+    gap: 4px;
+  }
+  
+  .logo svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  /* ===== FOOTER ===== */
+  footer {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px 3vw;
+    gap: 8px;
+    font-size: 11px;
+  }
+  
+  footer .logo {
+    font-size: 14px;
+  }
+  
+  /* ===== iOS OPTIMIZATIONS ===== */
+  html {
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  /* ===== SAFE AREAS ===== */
+  section {
+    padding-left: max(3vw, env(safe-area-inset-left));
+    padding-right: max(3vw, env(safe-area-inset-right));
+  }
+  
+  /* ===== FLEXIBLE IMAGES ===== */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+}
