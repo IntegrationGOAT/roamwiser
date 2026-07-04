@@ -1,7 +1,7 @@
-// Using Hugging Face chat-completions API (free tier available)
-const API_TOKEN = import.meta.env.VITE_HUGGINGFACE_API_TOKEN || ''
-const API_URL = '/api/huggingface'
-const API_MODEL = 'deepseek-ai/DeepSeek-V4-Flash:fireworks-ai'
+// OpenRouter API service
+const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || ''
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const API_MODEL = 'openrouter/free'
 
 export interface TripData {
   destination: string
@@ -58,8 +58,14 @@ export interface ExploreSpot {
   description: string
 }
 
+export interface StayEatRecommendation {
+  id: string
+  tag: string
+  title: string
+  bg: string
+}
+
 // Helper function to extract and parse JSON from model responses
-// Handles malformed JSON by attempting to fix common issues
 function extractAndParseJSON(text: string, isArray = false): unknown | null {
   if (!text) return null
 
@@ -117,16 +123,19 @@ function extractAndParseJSON(text: string, isArray = false): unknown | null {
   return null
 }
 
-async function callHuggingFaceAPI(prompt: string, maxTokens = 2048, _retries = 3): Promise<string> {
+async function callOpenRouterAPI(prompt: string, maxTokens = 2048, _retries = 3): Promise<string> {
   try {
-    console.log('Calling Hugging Face API...')
+    console.log('Calling OpenRouter API...')
 
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json'
+    if (!API_KEY) {
+      throw new Error('OpenRouter API key not configured')
     }
 
-    if (API_TOKEN) {
-      headers.Authorization = `Bearer ${API_TOKEN}`
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${API_KEY}`,
+      'HTTP-Referer': 'https://roamwise.travel',
+      'X-Title': 'Roamwise Travel'
     }
 
     const response = await fetch(API_URL, {
@@ -149,7 +158,6 @@ async function callHuggingFaceAPI(prompt: string, maxTokens = 2048, _retries = 3
       })
     })
 
-
     console.log('API Response status:', response.status)
 
     if (!response.ok) {
@@ -164,15 +172,11 @@ async function callHuggingFaceAPI(prompt: string, maxTokens = 2048, _retries = 3
     // Handle different response formats
     if (Array.isArray(data?.choices) && data.choices[0]?.message?.content) {
       return data.choices[0].message.content
-    } else if (data.generated_text) {
-      return data.generated_text
-    } else if (typeof data === 'string') {
-      return data
     }
     
     throw new Error('Invalid API response structure')
   } catch (error) {
-    console.error('Error calling Hugging Face API:', error)
+    console.error('Error calling OpenRouter API:', error)
     throw error
   }
 }
@@ -196,10 +200,10 @@ Keep it compact:
 
 Use dates in order from the trip start date.
 Format:
-{"id":"itin${index}","num":"ITINERARY ${String(index + 1).padStart(2, '0')}","title":"...","description":"...","days":[{"day":1,"date":"...","morning":"...","afternoon":"...","evening":"..."}]}`
+{"id":"itin${index}","num":"Itinerary","title":"...","description":"...","days":[{"day":1,"date":"...","morning":"...","afternoon":"...","evening":"..."}]}`
 
   try {
-    const text = await callHuggingFaceAPI(prompt, 1024)
+    const text = await callOpenRouterAPI(prompt, 1024)
     console.log(`Itinerary ${index} Response:`, text)
     
     const parsed = extractAndParseJSON(text, false)
@@ -323,7 +327,7 @@ Return ONLY this JSON shape:
 }`
 
   try {
-    const text = await callHuggingFaceAPI(prompt)
+    const text = await callOpenRouterAPI(prompt)
     console.log('Budget Response:', text)
     
     const parsed = extractAndParseJSON(text, false)
@@ -373,7 +377,7 @@ Return JSON:
 }`
 
   try {
-    const text = await callHuggingFaceAPI(prompt)
+    const text = await callOpenRouterAPI(prompt)
     console.log('Risk Response:', text)
     
     const parsed = extractAndParseJSON(text, false)
@@ -408,13 +412,13 @@ Return ONLY valid JSON as an array of 7 objects.
 Each object should have:
 - id: short slug (e.g., "backwaters", "desert")
 - title: place or landmark name
-- description: one short sentence
+- description: a well-formatted paragraph (2-3 sentences) highlighting key points. Use **bold** text to emphasize important features, tips, or highlights.
 
 Format:
 [{"id":"spot1","title":"...","description":"..."}]`
 
   try {
-    const text = await callHuggingFaceAPI(prompt)
+    const text = await callOpenRouterAPI(prompt)
     console.log('Explore Spots Response:', text)
     
     const parsed = extractAndParseJSON(text, true)
@@ -442,6 +446,50 @@ Format:
       { id: 'temple', title: 'Temple town, Madurai', description: 'Ancient Dravidian architecture' },
       { id: 'mountain', title: 'Mountain trails, Himachal', description: 'Scenic trekking paths' },
       { id: 'island', title: 'Island hopping, Andaman', description: 'Pristine beaches and coral reefs' }
+    ]
+  }
+}
+
+export async function generateStayEatRecommendations(tripData: TripData): Promise<StayEatRecommendation[]> {
+  const prompt = `Create 4 stay and eat recommendations for ${tripData.destination}. Trip length: ${tripData.tripLength} days. Budget: ${tripData.budget}. Interests: ${tripData.interests.join(', ')}.
+
+Return ONLY valid JSON as an array of 4 objects.
+Each object should have:
+- id: short slug (e.g., "backwater-house", "spice-trail")
+- tag: category (e.g., "Heritage stay", "Street food", "Fine dining", "Eco stay")
+- title: name of the place
+- bg: gradient background color (e.g., "linear-gradient(135deg,#2E5C50,#173731)")
+
+Create a mix of:
+- 2 stay recommendations (hotels, homestays, resorts)
+- 2 food recommendations (restaurants, street food, cafes)
+
+Format:
+[{"id":"place1","tag":"Heritage stay","title":"...","bg":"linear-gradient(135deg,#2E5C50,#173731)"}]`
+
+  try {
+    const text = await callOpenRouterAPI(prompt)
+    console.log('Stay & Eat Response:', text)
+    
+    const parsed = extractAndParseJSON(text, true)
+    if (parsed && Array.isArray(parsed)) {
+      return parsed as StayEatRecommendation[]
+    }
+    
+    // Return default if parsing fails
+    return [
+      { id: 'backwater-house', tag: 'Heritage stay', title: 'The Backwater House', bg: 'linear-gradient(135deg,#2E5C50,#173731)' },
+      { id: 'tea-cottages', tag: 'Eco stay', title: 'Hillside Tea Cottages', bg: 'linear-gradient(135deg,#3D5B3F,#173731)' },
+      { id: 'spice-trail', tag: 'Street food', title: 'Fort Kochi Spice Trail', bg: 'linear-gradient(135deg,#7A4B2A,#173731)' },
+      { id: 'lagoon-dining', tag: 'Fine dining', title: 'Table by the Lagoon', bg: 'linear-gradient(135deg,#4A3B6B,#173731)' }
+    ]
+  } catch (error) {
+    console.error('Error generating stay & eat recommendations:', error)
+    return [
+      { id: 'backwater-house', tag: 'Heritage stay', title: 'The Backwater House', bg: 'linear-gradient(135deg,#2E5C50,#173731)' },
+      { id: 'tea-cottages', tag: 'Eco stay', title: 'Hillside Tea Cottages', bg: 'linear-gradient(135deg,#3D5B3F,#173731)' },
+      { id: 'spice-trail', tag: 'Street food', title: 'Fort Kochi Spice Trail', bg: 'linear-gradient(135deg,#7A4B2A,#173731)' },
+      { id: 'lagoon-dining', tag: 'Fine dining', title: 'Table by the Lagoon', bg: 'linear-gradient(135deg,#4A3B6B,#173731)' }
     ]
   }
 }

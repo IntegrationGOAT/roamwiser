@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { generateItineraries, generateBudget, generateRiskPlanning, generateExploreSpots } from './services/huggingface.ts'
-import type { TripData, Itinerary, BudgetData, RiskData, ExploreSpot } from './services/huggingface.ts'
+import { generateItineraries, generateBudget, generateRiskPlanning, generateExploreSpots, generateStayEatRecommendations } from './services/openrouter.ts'
+import type { TripData, Itinerary, BudgetData, RiskData, ExploreSpot, StayEatRecommendation } from './services/openrouter.ts'
 import heroBg from './assets/assets.jpg'
 
 const CountUp = ({ end, duration = 2000, suffix = '', prefix = '' }: { end: number, duration?: number, suffix?: string, prefix?: string }) => {
@@ -113,12 +113,6 @@ const PhoneIcon = () => (
   </svg>
 )
 
-const LocationIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" style={{width: 20, height: 20, flexShrink: 0, marginTop: 2, color: '#D9A441'}}>
-    <path d="M12 2C7 2 5 6 5 10c0 6 7 12 7 12s7-6 7-12c0-4-2-8-7-8z" stroke="currentColor" strokeWidth="1.5"/>
-  </svg>
-)
-
 function App() {
   const [selectedChips, setSelectedChips] = useState<string[]>([])
   const [activeSection, setActiveSection] = useState<string>('hero')
@@ -138,6 +132,7 @@ function App() {
   const [budgetData, setBudgetData] = useState<BudgetData | null>(null)
   const [riskData, setRiskData] = useState<RiskData | null>(null)
   const [exploreSpots, setExploreSpots] = useState<ExploreSpot[] | null>(null)
+  const [stayEatData, setStayEatData] = useState<StayEatRecommendation[] | null>(null)
 
   const getBudgetPercent = (value: unknown, fallback = 0) => {
     if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -152,7 +147,6 @@ function App() {
     return fallback
   }
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generationProgress, setGenerationProgress] = useState(0)
 
   const defaultInterests = ['Adventure', 'Food', 'Nature', 'Culture', 'Nightlife']
   const [customInterests, setCustomInterests] = useState<string[]>([])
@@ -240,21 +234,9 @@ function App() {
 
     // Set generating state first
     setIsGenerating(true)
-    setGenerationProgress(0)
     
     // Force UI update before starting generation
     await new Promise(resolve => setTimeout(resolve, 100))
-    
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setGenerationProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval)
-          return 90
-        }
-        return prev + 10
-      })
-    }, 300)
 
     try {
       // Calculate trip length from start and end dates
@@ -271,19 +253,21 @@ function App() {
         startDate: formData.startDate || undefined
       }
 
-      // Generate all data in parallel
-      const [generatedItineraries, generatedBudget, generatedRisk] = await Promise.all([
-        generateItineraries(tripData),
-        generateBudget(tripData),
-        generateRiskPlanning(tripData)
-      ])
-
-      const generatedExploreSpots = await generateExploreSpots(tripData)
-
+      // Generate data one at a time sequentially
+      const generatedItineraries = await generateItineraries(tripData)
       console.log('Generated itineraries:', generatedItineraries)
+      
+      const generatedBudget = await generateBudget(tripData)
       console.log('Generated budget:', generatedBudget)
+      
+      const generatedRisk = await generateRiskPlanning(tripData)
       console.log('Generated risk:', generatedRisk)
+      
+      const generatedExploreSpots = await generateExploreSpots(tripData)
       console.log('Generated explore spots:', generatedExploreSpots)
+      
+      const generatedStayEat = await generateStayEatRecommendations(tripData)
+      console.log('Generated stay & eat:', generatedStayEat)
 
       if (generatedItineraries.length === 0) {
         alert('Failed to generate itineraries. Please check console for errors and try again.')
@@ -293,7 +277,7 @@ function App() {
       setBudgetData(generatedBudget)
       setRiskData(generatedRisk)
       setExploreSpots(generatedExploreSpots)
-      setGenerationProgress(100)
+      setStayEatData(generatedStayEat)
 
       // Scroll to route section after a short delay
       setTimeout(() => scrollToSection('route'), 600)
@@ -301,10 +285,8 @@ function App() {
       console.error('Error generating trip data:', error)
       alert('Failed to generate itinerary. Please try again.')
     } finally {
-      clearInterval(progressInterval)
       setTimeout(() => {
         setIsGenerating(false)
-        setGenerationProgress(0)
       }, 600)
     }
   }
@@ -498,15 +480,6 @@ function App() {
           <p className="muted">Every itinerary is built around your interests and travel pace — mornings for the must-sees, afternoons for the thing you actually came for, evenings to slow down.</p>
         </div>
         
-        {isGenerating && (
-          <div className="progress-container">
-            <div className="progress-bar">
-              <div className="progress-fill" style={{width: `${generationProgress}%`}}></div>
-            </div>
-            <div className="progress-text">Generating your personalized itineraries... {generationProgress}%</div>
-          </div>
-        )}
-        
         <div className="days">
           {isGenerating ? (
             Array.from({ length: 4 }).map((_, idx) => (
@@ -523,7 +496,6 @@ function App() {
               className={`day-card ${expandedCards[itin.id] ? 'expanded' : ''}`}
               onClick={() => toggleCard(itin.id)}
             >
-              <div className="day-num">{itin.num}</div>
               <div className="day-title">{itin.title}</div>
               <div className="slot">
                 <span>{itin.description.substring(0, 120)}...</span>
@@ -550,7 +522,7 @@ function App() {
               )}
             </div>
           )) : (
-            <div style={{textAlign: 'center', padding: '60px 20px', color: 'var(--color-muted-dark)'}}>
+            <div style={{gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px', color: 'var(--color-muted-dark)'}}>
               <p style={{fontSize: '18px', marginBottom: '12px'}}>No itineraries generated yet</p>
               <p style={{fontSize: '15px'}}>Fill in your trip details and click "Generate my itinerary" to see your personalized travel plans</p>
             </div>
@@ -566,14 +538,6 @@ function App() {
           <p className="muted">Set one number for the whole trip. Roamwise splits it across stay, food, transport and activities — then finds where a small shift saves real money.</p>
         </div>
 
-        {isGenerating && (
-          <div className="progress-container">
-            <div className="progress-bar">
-              <div className="progress-fill" style={{width: `${generationProgress}%`}}></div>
-            </div>
-            <div className="progress-text">Analysing budget allocation... {generationProgress}%</div>
-          </div>
-        )}
 
         {isGenerating ? (
           <div className="budget-wrap">
@@ -687,7 +651,17 @@ function App() {
           <p className="muted">Safe-zone mapping, live weather flags and government advisories, layered directly onto your route.</p>
         </div>
 
-        {riskData ? (
+        {isGenerating ? (
+          <div className="safety-grid">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <div key={idx} className="skeleton-card">
+                <div className="skeleton-line short" style={{width: '60%', marginBottom: '12px'}}></div>
+                <div className="skeleton-line medium" style={{width: '90%', marginBottom: '8px'}}></div>
+                <div className="skeleton-line long" style={{width: '95%'}}></div>
+              </div>
+            ))}
+          </div>
+        ) : riskData ? (
           <div className="safety-grid">
             <div className="safety-card">
               <ShieldIcon />
@@ -758,27 +732,9 @@ function App() {
             </div>
           </div>
         ) : (
-          <div className="safety-grid">
-            <div className="safety-card">
-              <ShieldIcon />
-              <h3>Safe-zone mapping</h3>
-              <p>Areas rated by local safety data, lit up on your route so you know where to walk after dark.</p>
-              <div className="badge green">Old Town — low risk</div>
-            </div>
-
-            <div className="safety-card">
-              <WeatherIcon />
-              <h3>Weather alerts</h3>
-              <p>Real-time flags mapped to your itinerary, with a same-day indoor alternative when needed.</p>
-              <div className="badge amber">Day 3 — heavy rain expected</div>
-            </div>
-
-            <div className="safety-card">
-              <AlertIcon />
-              <h3>Government advisories</h3>
-              <p>Official travel-advisory levels pulled in and translated into plain-language guidance.</p>
-              <div className="badge green">Level 1 — normal precautions</div>
-            </div>
+          <div style={{gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px', color: 'var(--color-muted-dark)'}}>
+            <p style={{fontSize: '18px', marginBottom: '12px'}}>No safety information generated yet</p>
+            <p style={{fontSize: '15px'}}>Generate your itinerary to get personalized safety advisories and weather forecasts</p>
           </div>
         )}
       </section>
@@ -792,38 +748,40 @@ function App() {
         </div>
 
         <div className="cards-row">
-          {[
-            { id: 'backwater-house', tag: 'Heritage stay', title: 'The Backwater House', rating: '★ 4.8', price: '₹4,200/night', bg: 'linear-gradient(135deg,#2E5C50,#173731)' },
-            { id: 'tea-cottages', tag: 'Eco stay', title: 'Hillside Tea Cottages', rating: '★ 4.6', price: '₹3,100/night', bg: 'linear-gradient(135deg,#3D5B3F,#173731)' },
-            { id: 'spice-trail', tag: 'Street food', title: 'Fort Kochi Spice Trail', rating: '★ 4.9', price: '₹250/meal', bg: 'linear-gradient(135deg,#7A4B2A,#173731)' },
-            { id: 'lagoon-dining', tag: 'Fine dining', title: 'Table by the Lagoon', rating: '★ 4.7', price: '₹1,800/person', bg: 'linear-gradient(135deg,#4A3B6B,#173731)' }
-          ].map(card => (
-            <div 
-              key={card.id}
-              className={`rec-card ${expandedCards[card.id] ? 'expanded' : ''}`}
-              onClick={() => toggleCard(card.id)}
-            >
-              <div className="rec-photo" style={{background: card.bg}}>
-                {card.id === 'backwater-house' && <HotelIcon />}
-                {card.id === 'tea-cottages' && <CottageIcon />}
-                {card.id === 'spice-trail' && <FoodIcon />}
-                {card.id === 'lagoon-dining' && <DiningIcon />}
-              </div>
-              <div className="rec-body">
-                <div className="rec-tag">{card.tag}</div>
-                <div className="rec-title">{card.title}</div>
-                <div className="rec-meta">
-                  <span>{card.rating}</span>
-                  <span>{card.price}</span>
+          {isGenerating ? (
+            Array.from({ length: 4 }).map((_, idx) => (
+              <div key={idx} className="skeleton-card" style={{padding: 0, overflow: 'hidden'}}>
+                <div className="skeleton-line" style={{height: '130px', borderRadius: 0, marginBottom: 0}}></div>
+                <div style={{padding: '16px'}}>
+                  <div className="skeleton-line short" style={{width: '40%', marginBottom: '8px'}}></div>
+                  <div className="skeleton-line medium" style={{width: '80%'}}></div>
                 </div>
-                {expandedCards[card.id] && (
-                  <div className="rec-expanded-content">
-                    <p>loremIpsum</p>
-                  </div>
-                )}
               </div>
+            ))
+          ) : stayEatData && stayEatData.length > 0 ? (
+            stayEatData.map(card => (
+              <div 
+                key={card.id}
+                className="rec-card"
+              >
+                <div className="rec-photo" style={{background: card.bg}}>
+                  {card.id === 'backwater-house' && <HotelIcon />}
+                  {card.id === 'tea-cottages' && <CottageIcon />}
+                  {card.id === 'spice-trail' && <FoodIcon />}
+                  {card.id === 'lagoon-dining' && <DiningIcon />}
+                </div>
+                <div className="rec-body">
+                  <div className="rec-tag">{card.tag}</div>
+                  <div className="rec-title">{card.title}</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={{gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px', color: 'var(--color-muted-light)'}}>
+              <p style={{fontSize: '18px', marginBottom: '12px'}}>No recommendations generated yet</p>
+              <p style={{fontSize: '15px'}}>Generate your itinerary to see personalized stay & dining recommendations</p>
             </div>
-          ))}
+          )}
         </div>
       </section>
 
@@ -873,33 +831,47 @@ function App() {
         </div>
 
         <div className="gallery">
-          {[
-            { id: 'backwaters', title: 'Backwaters, Kerala', bg: 'linear-gradient(160deg,#2E5C50,#0F221D)', big: true },
-            { id: 'desert', title: 'Desert dunes, Rajasthan', bg: 'linear-gradient(160deg,#7A4B2A,#2D1D10)', big: false },
-            { id: 'coastal', title: 'Coastal cliffs, Goa', bg: 'linear-gradient(160deg,#3D6E7A,#12292E)', big: false },
-            { id: 'teahills', title: 'Tea hills, Munnar', bg: 'linear-gradient(160deg,#4A6B3A,#152414)', big: false },
-            { id: 'temple', title: 'Temple town, Madurai', bg: 'linear-gradient(160deg,#6B4A7A,#1F1429)', big: false },
-            { id: 'mountain', title: 'Mountain trails, Himachal', bg: 'linear-gradient(160deg,#7A5A2A,#2A1E0C)', big: false },
-            { id: 'island', title: 'Island hopping, Andaman', bg: 'linear-gradient(160deg,#2A5A7A,#0D1F2A)', big: true }
-          ].map((tile, idx) => {
-            const spot = exploreSpots?.[idx]
-            return (
-            <div 
-              key={tile.id}
-              className={`tile ${tile.big ? 'big' : ''} ${expandedCards[tile.id] ? 'expanded' : ''}`}
-              style={{background: expandedCards[tile.id] ? getTileGradient(tile.id) : tile.bg}}
-              onClick={() => toggleCard(tile.id)}
-            >
-              {expandedCards[tile.id] && (
-                <div className="tile-expanded-content">
-                  <div className="eyebrow" style={{marginBottom: '10px'}}>{spot?.title || tile.title}</div>
-                  <p>{spot?.description || 'Explore this destination for a fuller local perspective.'}</p>
-                </div>
-              )}
-              {!expandedCards[tile.id] && <span>{spot?.title || tile.title}</span>}
+          {isGenerating ? (
+            Array.from({ length: 7 }).map((_, idx) => (
+              <div key={idx} className="skeleton-tile">
+                <div className="skeleton-line short" style={{width: '70%', marginBottom: '8px'}}></div>
+                <div className="skeleton-line medium" style={{width: '90%'}}></div>
+              </div>
+            ))
+          ) : exploreSpots && exploreSpots.length > 0 ? (
+            [
+              { id: 'backwaters', title: 'Backwaters, Kerala', bg: 'linear-gradient(160deg,#2E5C50,#0F221D)', big: true },
+              { id: 'desert', title: 'Desert dunes, Rajasthan', bg: 'linear-gradient(160deg,#7A4B2A,#2D1D10)', big: false },
+              { id: 'coastal', title: 'Coastal cliffs, Goa', bg: 'linear-gradient(160deg,#3D6E7A,#12292E)', big: false },
+              { id: 'teahills', title: 'Tea hills, Munnar', bg: 'linear-gradient(160deg,#4A6B3A,#152414)', big: false },
+              { id: 'temple', title: 'Temple town, Madurai', bg: 'linear-gradient(160deg,#6B4A7A,#1F1429)', big: false },
+              { id: 'mountain', title: 'Mountain trails, Himachal', bg: 'linear-gradient(160deg,#7A5A2A,#2A1E0C)', big: false },
+              { id: 'island', title: 'Island hopping, Andaman', bg: 'linear-gradient(160deg,#2A5A7A,#0D1F2A)', big: true }
+            ].map((tile, idx) => {
+              const spot = exploreSpots?.[idx]
+              return (
+              <div 
+                key={tile.id}
+                className={`tile ${tile.big ? 'big' : ''} ${expandedCards[tile.id] ? 'expanded' : ''}`}
+                style={{background: expandedCards[tile.id] ? getTileGradient(tile.id) : tile.bg}}
+                onClick={() => toggleCard(tile.id)}
+              >
+                {expandedCards[tile.id] && (
+                  <div className="tile-expanded-content">
+                    <div className="eyebrow" style={{marginBottom: '10px'}}>{spot?.title || tile.title}</div>
+                    <p dangerouslySetInnerHTML={{__html: spot?.description || 'Explore this destination for a fuller local perspective.'}} />
+                  </div>
+                )}
+                {!expandedCards[tile.id] && <span>{spot?.title || tile.title}</span>}
+              </div>
+              )
+            })
+          ) : (
+            <div style={{gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px', color: 'var(--color-muted-light)'}}>
+              <p style={{fontSize: '18px', marginBottom: '12px'}}>No explore spots generated yet</p>
+              <p style={{fontSize: '15px'}}>Generate your itinerary to discover amazing destinations</p>
             </div>
-            )
-          })}
+          )}
         </div>
       </section>
 
@@ -968,13 +940,7 @@ function App() {
               </div>
             </div>
 
-            <div className="cinfo-row">
-              <LocationIcon />
-              <div>
-                <div className="l">Studio</div>
-                <div className="v">Salt Lake, Kolkata · Fort Kochi, Kerala</div>
-              </div>
-            </div>
+
 
             <div className="socials">
               <a href="#">ig</a>
