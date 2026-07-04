@@ -1,6 +1,3 @@
-import { useState } from 'react'
-import type { TripData } from '../services/openrouter.ts'
-
 interface HeroSectionProps {
   formData: {
     destination: string

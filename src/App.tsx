@@ -12,48 +12,6 @@ import { GallerySection } from './components/GallerySection'
 import { AboutSection } from './components/AboutSection'
 import { ContactSection } from './components/ContactSection'
 
-const CountUp = ({ end, duration = 2000, suffix = '', prefix = '' }: { end: number, duration?: number, suffix?: string, prefix?: string }) => {
-  const [count, setCount] = useState(0)
-  
-  useEffect(() => {
-    let startTime: number
-    let animationFrame: number
-    
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp
-      const progress = Math.min((timestamp - startTime) / duration, 1)
-      const easeOut = 1 - Math.pow(1 - progress, 3)
-      
-      let currentCount: number
-      if (end >= 10000) {
-        currentCount = Math.floor(easeOut * end / 1000) * 1000
-      } else if (end >= 1000) {
-        currentCount = Math.floor(easeOut * end / 100) * 100
-      } else {
-        currentCount = Math.floor(easeOut * end)
-      }
-      
-      setCount(currentCount)
-      
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate)
-      }
-    }
-    
-    animationFrame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(animationFrame)
-  }, [end, duration])
-  
-  const formatNumber = (num: number) => {
-    if (num >= 1000) {
-      return num.toLocaleString('en-IN')
-    }
-    return num.toString()
-  }
-  
-  return <span>{prefix}{formatNumber(count)}{suffix}</span>
-}
-
 function App() {
   const [selectedChips, setSelectedChips] = useState<string[]>([])
   const [activeSection, setActiveSection] = useState<string>('hero')
@@ -88,9 +46,6 @@ function App() {
     }
     return fallback
   }
-
-  const defaultInterests = ['Adventure', 'Food', 'Nature', 'Culture', 'Nightlife']
-  const interests = [...defaultInterests, ...customInterests]
 
   const toggleChip = (chip: string) => {
     setSelectedChips(prev => 
