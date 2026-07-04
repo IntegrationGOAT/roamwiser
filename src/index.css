@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "./styles/main.css";
+@import "./styles/hero.css";
+@import "./styles/sections.css";
+@import "./styles/mobile.css";
 
 @theme {
   --color-ink: #10241F;
@@ -118,8 +122,865 @@
   }
   
   @media (max-width: 760px) {
+    /* ===== GLOBAL MOBILE RESET ===== */
+    * {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    
+    /* ===== PREVENT HORIZONTAL SCROLL ===== */
+    html, body {
+      overflow-x: hidden;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* ===== BASE SPACING ===== */
     section {
-      padding: 70px 6vw;
+      padding: 30px 3vw;
+    }
+    
+    /* ===== HERO SECTION ===== */
+    #hero {
+      padding-top: 70px;
+      min-height: auto;
+      padding-bottom: 20px;
+    }
+    
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .hero-eyebrow {
+      font-size: 9px;
+      margin-bottom: 8px;
+    }
+    
+    h1.display {
+      font-size: clamp(24px, 6vw, 32px);
+      line-height: 1.1;
+    }
+    
+    h1.display em {
+      font-weight: 500;
+    }
+    
+    .hero-sub {
+      font-size: 13px;
+      margin-top: 12px;
+      max-width: 100%;
+      line-height: 1.4;
+    }
+    
+    .hero-ctas {
+      margin-top: 16px;
+      gap: 6px;
+      flex-direction: column;
+    }
+    
+    .hero-ctas .btn {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 13px;
+      min-height: 44px;
+    }
+    
+    /* ===== TRIP BUILDER CARD ===== */
+    .ticket {
+      padding: 16px 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+      box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.3);
+      position: relative;
+      width: 100%;
+    }
+    
+    .ticket::before,
+    .ticket::after {
+      display: none;
+    }
+    
+    .ticket-top {
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .ticket-top .eyebrow {
+      font-size: 9px;
+    }
+    
+    /* ===== FORM FIELDS ===== */
+    .field-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    
+    .field {
+      gap: 2px;
+      width: 100%;
+    }
+    
+    .field label {
+      font-size: 9px;
+      letter-spacing: 0.04em;
+      margin-bottom: 1px;
+    }
+    
+    .field input,
+    .field select {
+      font-size: 16px;
+      padding: 9px 10px;
+      min-height: 38px;
+      border-radius: 6px;
+      width: 100%;
+      border-width: 1px;
+    }
+    
+    /* ===== CHIPS ===== */
+    .chips {
+      gap: 4px;
+      margin-top: 2px;
+    }
+    
+    .chip {
+      padding: 5px 10px;
+      font-size: 11px;
+      min-height: 28px;
+      border-radius: 999px;
+      border-width: 1px;
+    }
+    
+    /* ===== CUSTOM INTEREST INPUT ===== */
+    .custom-interest-input {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 4px !important;
+      margin-top: 4px;
+      width: 100%;
+    }
+    
+    .custom-interest-input input {
+    width: 100%;
+      font-size: 13px !important;
+      padding: 8px !important;
+      min-height: 36px !important;
+    }
+    
+    .custom-interest-input button {
+      width: 100%;
+      padding: 8px !important;
+      font-size: 12px !important;
+      min-height: 36px !important;
+    }
+    
+    /* ===== OVERRIDE ALL INLINE STYLES ===== */
+    
+    /* Force all elements to respect mobile layout */
+    [style*="display: flex"],
+    [style*="display:flex"] {
+      flex-direction: column !important;
+    }
+    
+    /* Override grid inline styles */
+    [style*="grid-template-columns"] {
+      grid-template-columns: 1fr !important;
+    }
+    
+    [style*="gridColumn"] {
+      grid-column: span 1 !important;
+    }
+    
+    /* Override width constraints */
+    [style*="max-width"] {
+      max-width: 100% !important;
+    }
+    
+    /* Override fixed widths */
+    [style*="width:"] {
+      max-width: 100% !important;
+    }
+    
+    /* Ensure all containers are full width */
+    div[style*="padding"] {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    
+    /* Override margin constraints */
+    [style*="marginTop"],
+    [style*="margin-top"] {
+      margin-top: 0 !important;
+    }
+    
+    [style*="marginBottom"],
+    [style*="margin-bottom"] {
+      margin-bottom: 0 !important;
+    }
+    
+    /* Force all text elements to full width */
+    p[style*="max-width"],
+    div[style*="max-width"] {
+      max-width: 100% !important;
+    }
+    
+    /* Override font sizes */
+    [style*="fontSize"] {
+      font-size: inherit !important;
+    }
+    
+    /* Override padding */
+    [style*="padding:"] {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    
+    /* Override text alignment */
+    [style*="textAlign: center"] {
+      text-align: center !important;
+    }
+    
+    /* Override flex properties */
+    [style*="flex:"] {
+      flex: 1 1 100% !important;
+    }
+    
+    /* Override gap */
+    [style*="gap:"] {
+      gap: 8px !important;
+    }
+    
+    /* Override border radius */
+    [style*="borderRadius"] {
+      border-radius: 8px !important;
+    }
+    
+    /* Override box shadow */
+    [style*="boxShadow"] {
+      box-shadow: none !important;
+    }
+    
+    /* Override transform */
+    [style*="transform"] {
+      transform: none !important;
+    }
+    
+    /* Override cursor */
+    [style*="cursor"] {
+      cursor: pointer !important;
+    }
+    
+    /* Override transition */
+    [style*="transition"] {
+      transition: none !important;
+    }
+    
+    /* Override position */
+    [style*="position"] {
+      position: static !important;
+    }
+    
+    /* Override list styles */
+    ul[style*="listStyle"] {
+      list-style: none !important;
+      padding: 0 !important;
+    }
+    
+    /* Override strong/bold text */
+    strong, b {
+      font-weight: 600 !important;
+    }
+    
+    /* ===== NEW MOBILE-FRIENDLY CLASSES ===== */
+    
+    /* Custom interest input */
+    .custom-interest-input {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 6px !important;
+      margin-top: 6px !important;
+      width: 100% !important;
+    }
+    
+    .custom-interest-input input {
+      width: 100% !important;
+      font-size: 13px !important;
+      padding: 8px !important;
+      min-height: 36px !important;
+    }
+    
+    .custom-interest-input button {
+      width: 100% !important;
+      padding: 8px !important;
+      font-size: 12px !important;
+      min-height: 36px !important;
+    }
+    
+    /* Empty states */
+    .empty-state {
+      text-align: center !important;
+      padding: 40px 20px !important;
+      color: var(--color-muted-dark) !important;
+      grid-column: 1 / -1 !important;
+    }
+    
+    .empty-state-title {
+      font-size: 16px !important;
+      margin-bottom: 10px !important;
+      font-weight: 600 !important;
+    }
+    
+    .empty-state-text {
+      font-size: 14px !important;
+      line-height: 1.5 !important;
+    }
+    
+    /* Day details */
+    .day-details {
+      margin-top: 12px !important;
+      padding-top: 12px !important;
+      border-top: 1px dashed rgba(20, 36, 32, 0.12) !important;
+    }
+    
+    .day-description {
+      font-size: 13px !important;
+      line-height: 1.6 !important;
+      margin-bottom: 12px !important;
+    }
+    
+    .schedule-title {
+      font-family: var(--font-family-fraunces) !important;
+      font-size: 16px !important;
+      margin-bottom: 12px !important;
+      color: var(--color-ink) !important;
+    }
+    
+    .schedule-day {
+      margin-bottom: 10px !important;
+      padding: 10px !important;
+      background: var(--color-paper-2) !important;
+      border-radius: 6px !important;
+      font-size: 13px !important;
+    }
+    
+    .schedule-header {
+      font-family: var(--font-family-space) !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      color: var(--color-coral) !important;
+      margin-bottom: 6px !important;
+    }
+    
+    .schedule-content {
+      font-size: 13px !important;
+      line-height: 1.5 !important;
+    }
+    
+    .schedule-item {
+      margin-bottom: 3px !important;
+    }
+    
+    /* Safety precautions */
+    .safety-precautions {
+      grid-column: span 1 !important;
+    }
+    
+    .safety-tips {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 8px !important;
+    }
+    
+    .safety-tip {
+      font-size: 13px !important;
+      padding: 10px !important;
+      background: rgba(91, 203, 179, 0.1) !important;
+      border-radius: 6px !important;
+      border: 1px solid rgba(91, 203, 179, 0.2) !important;
+    }
+    
+    /* Recommendation icons */
+    .rec-icon {
+      position: absolute !important;
+      bottom: 8px !important;
+      right: 8px !important;
+      width: 24px !important;
+      height: 24px !important;
+      opacity: 0.85 !important;
+    }
+    
+    /* Contact icons */
+    .contact-icon {
+      width: 18px !important;
+      height: 18px !important;
+      flex-shrink: 0 !important;
+      margin-top: 2px !important;
+      color: var(--color-gold) !important;
+    }
+    
+    /* ===== SUBMIT BUTTON ===== */
+    .ticket-cta {
+      margin-top: 12px;
+      padding: 12px;
+      font-size: 13px;
+      min-height: 44px;
+      width: 100%;
+    }
+    
+    /* ===== STATS ===== */
+    .stats {
+      margin-top: 20px;
+      gap: 12px;
+      padding-top: 15px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat {
+      flex: 1;
+      min-width: auto;
+      padding-right: 0;
+      text-align: center;
+    }
+    
+    .stat .num {
+      font-size: 18px;
+    }
+    
+    .stat .lbl {
+      font-size: 9px;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+    
+    /* ===== SECTION HEADERS ===== */
+    .sec-head {
+      margin-bottom: 20px;
+      max-width: 100%;
+    }
+    
+    .sec-head .eyebrow {
+      font-size: 9px;
+      margin-bottom: 6px;
+    }
+    
+    .sec-head h2 {
+      font-size: clamp(20px, 5vw, 26px);
+      line-height: 1.15;
+    }
+    
+    .sec-head p {
+      font-size: 13px;
+      margin-top: 8px;
+      max-width: 100%;
+      line-height: 1.4;
+    }
+    
+    /* ===== DAY CARDS ===== */
+    .days {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    
+    .day-card {
+      padding: 12px;
+      border-radius: 8px;
+      border-width: 1px;
+    }
+    
+    .day-title {
+      font-size: 15px;
+      margin: 2px 0 8px;
+    }
+    
+    .slot {
+      font-size: 12px;
+      padding: 4px 0;
+    }
+    
+    /* ===== BUDGET SECTION ===== */
+    .budget-wrap {
+      gap: 20px;
+    }
+    
+    .bars {
+      gap: 8px;
+    }
+    
+    .bar-row {
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    
+    .bar-row .b-label {
+      width: 55px;
+      font-size: 10px;
+    }
+    
+    .bar-track {
+      height: 6px;
+    }
+    
+    .bar-row .b-pct {
+      width: 24px;
+      font-size: 10px;
+    }
+    
+    .budget-card {
+      padding: 16px;
+      border-radius: 8px;
+    }
+    
+    .budget-total {
+      font-size: 24px;
+    }
+    
+    .budget-meta {
+      font-size: 11px;
+    }
+    
+    .save-callout {
+      font-size: 11px;
+      padding: 8px;
+      margin-top: 12px;
+    }
+    
+    /* ===== SAFETY CARDS ===== */
+    .safety-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    
+    .safety-card {
+      padding: 14px;
+      border-radius: 8px;
+    }
+    
+    .safety-icon {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 8px;
+    }
+    
+    .safety-card h3 {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    
+    .safety-card p {
+      font-size: 12px;
+    }
+    
+    .safety-card[style*="grid-template-columns"] {
+      grid-template-columns: 1fr !important;
+    }
+    
+    /* ===== STAY & EAT CARDS ===== */
+    .cards-row {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    
+    .rec-card {
+      border-radius: 8px;
+    }
+    
+    .rec-photo {
+      height: 90px;
+    }
+    
+    .rec-body {
+      padding: 10px;
+    }
+    
+    .rec-title {
+      font-size: 14px;
+    }
+    
+    /* ===== GALLERY ===== */
+    .gallery {
+      grid-template-columns: 1fr;
+      grid-auto-rows: 120px;
+      gap: 6px;
+    }
+    
+    .tile.big {
+      grid-row: span 1;
+    }
+    
+    .gallery .tile {
+      border-radius: 6px;
+      padding: 8px;
+    }
+    
+    .gallery .tile span {
+      font-size: 12px;
+    }
+    
+    /* ===== TRANSLATION ===== */
+    .translate-wrap {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .chat-mock {
+      padding: 12px;
+      border-radius: 8px;
+    }
+    
+    .bubble {
+      font-size: 12px;
+      padding: 8px 10px;
+    }
+    
+    /* ===== ABOUT SECTION ===== */
+    .about-wrap {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .about-stats {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    
+    .about-stat .num {
+      font-size: 20px;
+    }
+    
+    .about-stat .lbl {
+      font-size: 10px;
+    }
+    
+    /* ===== CONTACT SECTION ===== */
+    .contact-wrap {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .cform input,
+    .cform textarea {
+      font-size: 16px;
+      padding: 10px;
+      min-height: 40px;
+      border-radius: 6px;
+    }
+    
+    .cform textarea {
+      min-height: 80px;
+    }
+    
+    .cinfo-row {
+      margin-bottom: 12px;
+    }
+    
+    .cinfo-row .v {
+      font-size: 13px;
+    }
+    
+    /* ===== BUTTONS ===== */
+    .btn {
+      min-height: 44px;
+      padding: 12px 16px;
+      font-size: 13px;
+      border-radius: 999px;
+    }
+    
+    /* ===== REMOVE HOVER EFFECTS ===== */
+    .day-card:hover,
+    .safety-card:hover,
+    .rec-card:hover,
+    .gallery .tile:hover,
+    .tile:hover {
+      transform: none;
+      box-shadow: inherit;
+    }
+    
+    /* ===== NAVIGATION ===== */
+    nav {
+      padding: 12px 3vw;
+    }
+    
+    .logo {
+      font-size: 16px;
+      gap: 4px;
+    }
+    
+    .logo svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    /* ===== FOOTER ===== */
+    footer {
+      flex-direction: column;
+      text-align: center;
+      padding: 20px 3vw;
+      gap: 8px;
+      font-size: 11px;
+    }
+    
+    footer .logo {
+      font-size: 14px;
+    }
+    
+    /* ===== iOS OPTIMIZATIONS ===== */
+    html {
+      -webkit-overflow-scrolling: touch;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* ===== SAFE AREAS ===== */
+    section {
+      padding-left: max(3vw, env(safe-area-inset-left));
+      padding-right: max(3vw, env(safe-area-inset-right));
+    }
+    
+    /* ===== OVERRIDE INLINE STYLES FROM APP.TSX ===== */
+    
+    /* Hero section inline styles */
+    #hero .hero-grid > div:first-child {
+      margin-bottom: 0 !important;
+    }
+    
+    #hero .hero-grid > div:last-child {
+      margin-top: 0 !important;
+    }
+    
+    /* Override ticket card inline margins */
+    .ticket,
+    [class*="ticket"] {
+      margin-top: 0 !important;
+    }
+    
+    /* Override field row inline styles */
+    .field-row[style*="grid-template-columns"] {
+      grid-template-columns: 1fr !important;
+    }
+    
+    /* Override custom interest input inline styles */
+    .field > div[style*="display: flex"],
+    .field > div[style*="display:flex"] {
+      flex-direction: column !important;
+      gap: 6px !important;
+    }
+    
+    /* Override stats inline styles */
+    .stats {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 12px !important;
+    }
+    
+    /* Override section header inline styles */
+    .sec-head {
+      max-width: 100% !important;
+      margin-bottom: 20px !important;
+    }
+    
+    /* Override day card expanded styles on mobile */
+    .day-card.expanded {
+      grid-column: span 1 !important;
+      grid-row: span 1 !important;
+    }
+    
+    /* Override gallery tile expanded styles */
+    .gallery .tile.expanded {
+      grid-column: span 1 !important;
+      grid-row: span 1 !important;
+    }
+    
+    /* Override rec card expanded styles */
+    .rec-card.expanded {
+      grid-column: span 1 !important;
+      grid-row: span 1 !important;
+    }
+    
+    /* Ensure all cards fit viewport */
+    .day-card,
+    .safety-card,
+    .rec-card,
+    .ticket,
+    .budget-card,
+    .skeleton-card {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+    
+    /* Override any fixed widths */
+    [style*="width:"][style*="px"] {
+      max-width: 100% !important;
+    }
+    
+    /* Override max-width constraints */
+    [style*="max-width"] {
+      max-width: 100% !important;
+    }
+    
+    /* Ensure proper box sizing */
+    .ticket,
+    .day-card,
+    .safety-card,
+    .rec-card,
+    .budget-card {
+      box-sizing: border-box !important;
+    }
+    
+    /* Override hero sub max-width */
+    .hero-sub {
+      max-width: 100% !important;
+    }
+    
+    /* Override section head max-width */
+    .sec-head p {
+      max-width: 100% !important;
+    }
+    
+    /* Force all grids to single column on mobile */
+    .days,
+    .cards-row,
+    .gallery,
+    .budget-wrap,
+    .safety-grid,
+    .about-wrap,
+    .contact-wrap,
+    .translate-wrap {
+      grid-template-columns: 1fr !important;
+    }
+    
+    /* Override gallery grid rows */
+    .gallery {
+      grid-auto-rows: 120px !important;
+    }
+    
+    /* Ensure buttons are full width */
+    .ticket-cta,
+    .hero-ctas .btn {
+      width: 100% !important;
+      justify-content: center !important;
+    }
+    
+    /* Override any inline padding/margins */
+    [style*="padding:"][style*="px"] {
+      padding-left: inherit !important;
+      padding-right: inherit !important;
+    }
+    
+    /* Make all text containers full width */
+    .sec-head,
+    .hero-sub,
+    .safety-card p,
+    .day-expanded-content,
+    .rec-expanded-content {
+      max-width: 100% !important;
     }
   }
   
@@ -227,11 +1088,15 @@
     color: var(--color-teal-line);
   }
   
-  @media (max-width: 900px) {
-    .navlinks {
-      display: none;
-    }
-  }
+   @media (max-width: 900px) {
+     .navlinks {
+       display: none;
+     }
+     
+     nav .btn {
+       display: none;
+     }
+   }
   
   /* Hero */
   #hero {
