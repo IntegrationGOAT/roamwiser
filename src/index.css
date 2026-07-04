@@ -629,6 +629,14 @@
     width: 100%;
   }
   
+  .skeleton-tile {
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 12px 30px -18px rgba(20, 36, 32, 0.25);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  
   @keyframes shimmer {
     0% {
       background-position: 200% 0;
@@ -674,6 +682,13 @@
     font-family: var(--font-family-nunito);
     font-size: 14px;
     color: var(--color-muted-dark);
+  }
+  
+  .loading-gif {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 20px;
+    display: block;
   }
   
   /* Budget */
@@ -1038,7 +1053,7 @@
   
   .tile-expanded-content p {
     color: #fff;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.7;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   }
