@@ -113,12 +113,6 @@ const PhoneIcon = () => (
   </svg>
 )
 
-const LocationIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" style={{width: 20, height: 20, flexShrink: 0, marginTop: 2, color: '#D9A441'}}>
-    <path d="M12 2C7 2 5 6 5 10c0 6 7 12 7 12s7-6 7-12c0-4-2-8-7-8z" stroke="currentColor" strokeWidth="1.5"/>
-  </svg>
-)
-
 function App() {
   const [selectedChips, setSelectedChips] = useState<string[]>([])
   const [activeSection, setActiveSection] = useState<string>('hero')
@@ -153,7 +147,6 @@ function App() {
     return fallback
   }
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generationProgress, setGenerationProgress] = useState(0)
 
   const defaultInterests = ['Adventure', 'Food', 'Nature', 'Culture', 'Nightlife']
   const [customInterests, setCustomInterests] = useState<string[]>([])
@@ -241,21 +234,9 @@ function App() {
 
     // Set generating state first
     setIsGenerating(true)
-    setGenerationProgress(0)
     
     // Force UI update before starting generation
     await new Promise(resolve => setTimeout(resolve, 100))
-    
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setGenerationProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval)
-          return 90
-        }
-        return prev + 10
-      })
-    }, 300)
 
     try {
       // Calculate trip length from start and end dates
@@ -288,12 +269,6 @@ function App() {
       const generatedStayEat = await generateStayEatRecommendations(tripData)
       console.log('Generated stay & eat:', generatedStayEat)
 
-      console.log('Generated itineraries:', generatedItineraries)
-      console.log('Generated budget:', generatedBudget)
-      console.log('Generated risk:', generatedRisk)
-      console.log('Generated explore spots:', generatedExploreSpots)
-      console.log('Generated stay & eat:', generatedStayEat)
-
       if (generatedItineraries.length === 0) {
         alert('Failed to generate itineraries. Please check console for errors and try again.')
       }
@@ -303,7 +278,6 @@ function App() {
       setRiskData(generatedRisk)
       setExploreSpots(generatedExploreSpots)
       setStayEatData(generatedStayEat)
-      setGenerationProgress(100)
 
       // Scroll to route section after a short delay
       setTimeout(() => scrollToSection('route'), 600)
@@ -311,10 +285,8 @@ function App() {
       console.error('Error generating trip data:', error)
       alert('Failed to generate itinerary. Please try again.')
     } finally {
-      clearInterval(progressInterval)
       setTimeout(() => {
         setIsGenerating(false)
-        setGenerationProgress(0)
       }, 600)
     }
   }
