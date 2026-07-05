@@ -58,20 +58,16 @@ export interface ExploreSpot {
   description: string
 }
 
-export interface StayEatRecommendation {
-  id: string
-  tag: string
-  title: string
-  bg: string
-}
-
 // Helper function to extract and parse JSON from model responses
 function extractAndParseJSON(text: string, isArray = false): unknown | null {
   if (!text) return null
 
+  // Strip markdown code fences (```json ... ``` or ``` ... ```)
+  let cleaned = text.replace(/```(?:json)?\s*([\s\S]*?)```/g, '$1').trim()
+
   // Try to find JSON in the response
   const pattern = isArray ? /\[[\s\S]*\]/ : /\{[\s\S]*\}/
-  const jsonMatch = text.match(pattern)
+  const jsonMatch = cleaned.match(pattern)
 
   if (!jsonMatch) return null
 
@@ -101,14 +97,14 @@ function extractAndParseJSON(text: string, isArray = false): unknown | null {
   let depth = 0
   let startIndex = -1
 
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] === openChar) {
+  for (let i = 0; i < cleaned.length; i++) {
+    if (cleaned[i] === openChar) {
       if (depth === 0) startIndex = i
       depth++
-    } else if (text[i] === closeChar) {
+    } else if (cleaned[i] === closeChar) {
       depth--
       if (depth === 0 && startIndex !== -1) {
-        jsonStr = text.slice(startIndex, i + 1)
+        jsonStr = cleaned.slice(startIndex, i + 1)
         // Remove trailing commas
         jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1')
         try {
@@ -117,6 +113,116 @@ function extractAndParseJSON(text: string, isArray = false): unknown | null {
           // Continue to try other approaches
         }
       }
+    }
+  }
+
+  // If bracket matching never closed (e.g. model output ends mid-JSON),
+  // try to extract what we have from startIndex to end
+  if (startIndex !== -1) {
+    jsonStr = cleaned.slice(startIndex)
+    // Remove trailing non-JSON content after the last valid-looking part
+    // Try to find the last complete object/array
+    const lastClose = jsonStr.lastIndexOf(closeChar)
+    if (lastClose !== -1) {
+      jsonStr = jsonStr.slice(0, lastClose + 1)
+    }
+    jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1')
+    try {
+      return JSON.parse(jsonStr)
+    } catch (e) {
+      // Continue to fallback approaches
+    }
+  }
+
+  // Fallback: extract all complete {...} objects by tracking brace depth
+  // This handles hybrid formats like: [{"id":"x"}, "key2":{...}, "key3":{...}]
+  // and also extracts objects from narrative text.
+  // We do NOT use regex lazy matching because {[\s\S]*?} would match the
+  // SHORTEST possible {...} (e.g. {"id":"spot1"}) which is not a complete object.
+  const objects: unknown[] = []
+  let objStart = -1
+  let braceDepth = 0
+
+  for (let i = 0; i < cleaned.length; i++) {
+    const ch = cleaned[i]
+    if (ch === '{') {
+      if (braceDepth === 0) objStart = i
+      braceDepth++
+    } else if (ch === '}') {
+      braceDepth--
+      if (braceDepth === 0 && objStart !== -1) {
+        const candidate = cleaned.slice(objStart, i + 1)
+        // Remove trailing commas that might be inside
+        const cleanedJson = candidate.replace(/,\s*([}\]])/g, '$1')
+        try {
+          const parsed = JSON.parse(cleanedJson)
+          if (typeof parsed === 'object' && parsed !== null) {
+            objects.push(parsed)
+          }
+        } catch (e) {
+          // Skip invalid objects
+        }
+        objStart = -1
+      }
+    }
+  }
+
+  // If we found at least one valid object via brace tracking, return it
+  if (objects.length > 0) {
+    if (isArray) {
+      return objects
+    }
+    return objects[0]
+  }
+
+  // Last resort: some models output entries like:
+  // [{"id":"x","title":"...","description":"..."}, "spot2":"Title","description":"..."}, "spot3":"Title","description":"..."}]
+  // where only the FIRST entry has an opening { and subsequent entries are missing it,
+  // and use "spotN": "Title" instead of "title": "Title".
+  if (isArray) {
+    // Find the first complete object (up to the first },)
+    const firstObjEnd = cleaned.indexOf('},')
+    if (firstObjEnd !== -1) {
+      const firstObj = cleaned.slice(0, firstObjEnd + 1)
+      try {
+        const parsed = JSON.parse(firstObj)
+        if (typeof parsed === 'object' && parsed !== null) {
+          objects.push(parsed)
+        }
+      } catch (e) {
+        // Skip
+      }
+
+      // Now extract remaining entries that are missing opening {
+      // Pattern: , "spotN": "Title", "description": "..."}
+      // or: , "spotN": "Title", "description": "..."}
+      const remaining = cleaned.slice(firstObjEnd + 1).trim()
+      
+      // Match entries like: , "spot2": "Title", "description": "..."}
+      // or: , "spot2": "Title", "description": "..."}
+      const entryRegex = /,\s*"([^"]+)"\s*:\s*"([^"]*)"\s*,\s*"([^"]+)"\s*:\s*"([^"]*)"\s*\}/g
+      let entryMatch
+      while ((entryMatch = entryRegex.exec(remaining)) !== null) {
+        const key1 = entryMatch[1]  // e.g. "spot2"
+        const val1 = entryMatch[2]  // e.g. "Desert of Munnar" (this is the title)
+        const key2 = entryMatch[3]  // e.g. "description"
+        const val2 = entryMatch[4]  // e.g. "Discover the Desert..."
+        
+        // Reconstruct as a proper object: {"id":"spot2","title":"Desert of Munnar","description":"..."}
+        const reconstructed = `{"id":"${key1}","title":${JSON.stringify(val1)},"${key2}":${JSON.stringify(val2)}}`
+        try {
+          const parsed = JSON.parse(reconstructed)
+          if (typeof parsed === 'object' && parsed !== null) {
+            objects.push(parsed)
+          }
+        } catch (e) {
+          // Skip
+        }
+      }
+    }
+
+    if (objects.length > 0) {
+      return objects
     }
   }
 
@@ -170,8 +276,32 @@ async function callOpenRouterAPI(prompt: string, maxTokens = 2048, _retries = 3)
     console.log('Full API response:', data)
     
     // Handle different response formats
-    if (Array.isArray(data?.choices) && data.choices[0]?.message?.content) {
-      return data.choices[0].message.content
+    if (Array.isArray(data?.choices) && data.choices[0]?.message) {
+      const msg = data.choices[0].message
+      
+      // content is a plain string
+      if (typeof msg.content === 'string' && msg.content.trim()) {
+        return msg.content
+      }
+      
+      // content is an array of content parts (e.g. [{type: "text", text: "..."}])
+      if (Array.isArray(msg.content)) {
+        const textParts = msg.content
+          .filter((part: unknown) => typeof part === 'object' && part !== null && (part as Record<string, unknown>).type === 'text')
+          .map((part: unknown) => (part as Record<string, unknown>).text as string)
+          .filter(Boolean)
+        if (textParts.length > 0) {
+          return textParts.join('\n')
+        }
+      }
+      
+      // Some models put content in a nested reasoning/content structure
+      if (msg.reasoning || msg.reasoning_content) {
+        const reasoning = msg.reasoning || msg.reasoning_content
+        if (typeof reasoning === 'string' && reasoning.trim()) {
+          return reasoning
+        }
+      }
     }
     
     throw new Error('Invalid API response structure')
@@ -203,7 +333,7 @@ Format:
 {"id":"itin${index}","num":"Itinerary","title":"...","description":"...","days":[{"day":1,"date":"...","morning":"...","afternoon":"...","evening":"..."}]}`
 
   try {
-    const text = await callOpenRouterAPI(prompt, 1024)
+    const text = await callOpenRouterAPI(prompt, 2048)
     console.log(`Itinerary ${index} Response:`, text)
     
     const parsed = extractAndParseJSON(text, false)
@@ -408,7 +538,8 @@ Return JSON:
 export async function generateExploreSpots(tripData: TripData): Promise<ExploreSpot[]> {
   const prompt = `Create 7 explore spots for ${tripData.destination}. Trip length: ${tripData.tripLength} days.
 
-Return ONLY valid JSON as an array of 7 objects.
+Return ONLY a valid JSON array of exactly 7 objects. Do NOT use numbered keys like "spot1": — each item must be an array element, not an object property.
+
 Each object should have:
 - id: short slug (e.g., "backwaters", "desert")
 - title: place or landmark name
@@ -450,46 +581,3 @@ Format:
   }
 }
 
-export async function generateStayEatRecommendations(tripData: TripData): Promise<StayEatRecommendation[]> {
-  const prompt = `Create 4 stay and eat recommendations for ${tripData.destination}. Trip length: ${tripData.tripLength} days. Budget: ${tripData.budget}. Interests: ${tripData.interests.join(', ')}.
-
-Return ONLY valid JSON as an array of 4 objects.
-Each object should have:
-- id: short slug (e.g., "backwater-house", "spice-trail")
-- tag: category (e.g., "Heritage stay", "Street food", "Fine dining", "Eco stay")
-- title: name of the place
-- bg: gradient background color (e.g., "linear-gradient(135deg,#2E5C50,#173731)")
-
-Create a mix of:
-- 2 stay recommendations (hotels, homestays, resorts)
-- 2 food recommendations (restaurants, street food, cafes)
-
-Format:
-[{"id":"place1","tag":"Heritage stay","title":"...","bg":"linear-gradient(135deg,#2E5C50,#173731)"}]`
-
-  try {
-    const text = await callOpenRouterAPI(prompt)
-    console.log('Stay & Eat Response:', text)
-    
-    const parsed = extractAndParseJSON(text, true)
-    if (parsed && Array.isArray(parsed)) {
-      return parsed as StayEatRecommendation[]
-    }
-    
-    // Return default if parsing fails
-    return [
-      { id: 'backwater-house', tag: 'Heritage stay', title: 'The Backwater House', bg: 'linear-gradient(135deg,#2E5C50,#173731)' },
-      { id: 'tea-cottages', tag: 'Eco stay', title: 'Hillside Tea Cottages', bg: 'linear-gradient(135deg,#3D5B3F,#173731)' },
-      { id: 'spice-trail', tag: 'Street food', title: 'Fort Kochi Spice Trail', bg: 'linear-gradient(135deg,#7A4B2A,#173731)' },
-      { id: 'lagoon-dining', tag: 'Fine dining', title: 'Table by the Lagoon', bg: 'linear-gradient(135deg,#4A3B6B,#173731)' }
-    ]
-  } catch (error) {
-    console.error('Error generating stay & eat recommendations:', error)
-    return [
-      { id: 'backwater-house', tag: 'Heritage stay', title: 'The Backwater House', bg: 'linear-gradient(135deg,#2E5C50,#173731)' },
-      { id: 'tea-cottages', tag: 'Eco stay', title: 'Hillside Tea Cottages', bg: 'linear-gradient(135deg,#3D5B3F,#173731)' },
-      { id: 'spice-trail', tag: 'Street food', title: 'Fort Kochi Spice Trail', bg: 'linear-gradient(135deg,#7A4B2A,#173731)' },
-      { id: 'lagoon-dining', tag: 'Fine dining', title: 'Table by the Lagoon', bg: 'linear-gradient(135deg,#4A3B6B,#173731)' }
-    ]
-  }
-}

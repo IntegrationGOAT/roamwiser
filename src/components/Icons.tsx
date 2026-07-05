@@ -15,8 +15,8 @@ export const ShieldIcon = () => (
 
 export const WeatherIcon = () => (
   <svg className="safety-icon" viewBox="0 0 24 24" fill="none">
-    <path d="M4 15a4 4 0 010-8 5 5 0 09.6-1.5A4.5 4.5 0 0118.5 15H4z" stroke="#9A5B12" strokeWidth="1.6"/>
-    <path d="M8 19l1-2M12 19l1-2M16 19l1-2" stroke="#9A5B12" strokeWidth="1.6"/>
+    <circle cx="12" cy="10" r="4" stroke="#1E6B44" strokeWidth="1.6"/>
+    <path d="M12 4V2M12 18v-2M18 10h2M4 10h2M16.24 5.76l1.41-1.41M6.35 17.65l1.41-1.41M16.24 14.24l1.41 1.41M6.35 6.35l1.41 1.41" stroke="#1E6B44" strokeWidth="1.4" strokeLinecap="round"/>
   </svg>
 )
 
