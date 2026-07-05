@@ -13,28 +13,33 @@ export const GallerySection = ({
   expandedCards,
   onToggleCard
 }: GallerySectionProps) => {
-  const defaultTiles = [
-    { id: 'backwaters', title: 'Backwaters, Kerala', bg: 'linear-gradient(160deg,#2E5C50,#0F221D)', big: true },
-    { id: 'desert', title: 'Desert dunes, Rajasthan', bg: 'linear-gradient(160deg,#7A4B2A,#2D1D10)', big: false },
-    { id: 'coastal', title: 'Coastal cliffs, Goa', bg: 'linear-gradient(160deg,#3D6E7A,#12292E)', big: false },
-    { id: 'teahills', title: 'Tea hills, Munnar', bg: 'linear-gradient(160deg,#4A6B3A,#152414)', big: false },
-    { id: 'temple', title: 'Temple town, Madurai', bg: 'linear-gradient(160deg,#6B4A7A,#1F1429)', big: false },
-    { id: 'mountain', title: 'Mountain trails, Himachal', bg: 'linear-gradient(160deg,#7A5A2A,#2A1E0C)', big: false },
-    { id: 'island', title: 'Island hopping, Andaman', bg: 'linear-gradient(160deg,#2A5A7A,#0D1F2A)', big: true }
+  const gradients = [
+    'linear-gradient(160deg,#2E5C50,#0F221D)',
+    'linear-gradient(160deg,#7A4B2A,#2D1D10)',
+    'linear-gradient(160deg,#3D6E7A,#12292E)',
+    'linear-gradient(160deg,#4A6B3A,#152414)',
+    'linear-gradient(160deg,#6B4A7A,#1F1429)',
+    'linear-gradient(160deg,#7A5A2A,#2A1E0C)',
+    'linear-gradient(160deg,#2A5A7A,#0D1F2A)'
   ]
 
-  const getTileGradient = (tileId: string): string => {
-    const gradients: { [key: string]: string } = {
-      'backwaters': 'linear-gradient(160deg,#2E5C50,#0F221D)',
-      'desert': 'linear-gradient(160deg,#7A4B2A,#2D1D10)',
-      'coastal': 'linear-gradient(160deg,#3D6E7A,#12292E)',
-      'teahills': 'linear-gradient(160deg,#4A6B3A,#152414)',
-      'temple': 'linear-gradient(160deg,#6B4A7A,#1F1429)',
-      'mountain': 'linear-gradient(160deg,#7A5A2A,#2A1E0C)',
-      'island': 'linear-gradient(160deg,#2A5A7A,#0D1F2A)'
-    }
-    return gradients[tileId] || 'linear-gradient(160deg,#2E5C50,#0F221D)'
-  }
+  const tiles = exploreSpots && exploreSpots.length > 0
+    ? exploreSpots.map((spot, idx) => ({
+        id: spot.id,
+        title: spot.title,
+        description: spot.description,
+        bg: gradients[idx % gradients.length],
+        big: idx === 0 || idx === 6 // first and last are big
+      }))
+    : [
+        { id: 'backwaters', title: 'Backwaters, Kerala', description: '', bg: gradients[0], big: true },
+        { id: 'desert', title: 'Desert dunes, Rajasthan', description: '', bg: gradients[1], big: false },
+        { id: 'coastal', title: 'Coastal cliffs, Goa', description: '', bg: gradients[2], big: false },
+        { id: 'teahills', title: 'Tea hills, Munnar', description: '', bg: gradients[3], big: false },
+        { id: 'temple', title: 'Temple town, Madurai', description: '', bg: gradients[4], big: false },
+        { id: 'mountain', title: 'Mountain trails, Himachal', description: '', bg: gradients[5], big: false },
+        { id: 'island', title: 'Island hopping, Andaman', description: '', bg: gradients[6], big: true }
+      ]
 
   return (
     <section id="gallery" className="dark" data-spine="Explore">
@@ -53,25 +58,22 @@ export const GallerySection = ({
             </div>
           ))
         ) : exploreSpots && exploreSpots.length > 0 ? (
-          defaultTiles.map((tile, idx) => {
-            const spot = exploreSpots?.[idx]
-            return (
-              <div 
-                key={tile.id}
-                className={`tile ${tile.big ? 'big' : ''} ${expandedCards[tile.id] ? 'expanded' : ''}`}
-                style={{background: expandedCards[tile.id] ? getTileGradient(tile.id) : tile.bg}}
-                onClick={() => onToggleCard(tile.id)}
-              >
-                {expandedCards[tile.id] && (
-                  <div className="tile-expanded-content">
-                    <div className="eyebrow">{spot?.title || tile.title}</div>
-                    <p dangerouslySetInnerHTML={{__html: spot?.description || 'Explore this destination for a fuller local perspective.'}} />
-                  </div>
-                )}
-                {!expandedCards[tile.id] && <span>{spot?.title || tile.title}</span>}
-              </div>
-            )
-          })
+          tiles.map((tile) => (
+            <div 
+              key={tile.id}
+              className={`tile ${tile.big ? 'big' : ''} ${expandedCards[tile.id] ? 'expanded' : ''}`}
+              style={{background: expandedCards[tile.id] ? tile.bg : tile.bg}}
+              onClick={() => onToggleCard(tile.id)}
+            >
+              {expandedCards[tile.id] && (
+                <div className="tile-expanded-content">
+                  <div className="eyebrow">{tile.title}</div>
+                  <p dangerouslySetInnerHTML={{__html: tile.description || 'Explore this destination for a fuller local perspective.'}} />
+                </div>
+              )}
+              {!expandedCards[tile.id] && <span>{tile.title}</span>}
+            </div>
+          ))
         ) : (
           <>
             <div className="empty-state">

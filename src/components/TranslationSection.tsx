@@ -2,7 +2,7 @@ interface TranslationSectionProps {}
 
 export const TranslationSection = ({}: TranslationSectionProps) => {
   return (
-    <section id="translate" className="light" data-spine="Speak">
+    <section id="translate" className="dark" data-spine="Speak">
       <div className="sec-head">
         <div className="eyebrow">Speak the place</div>
         <h2>AI translation, right where you need it</h2>

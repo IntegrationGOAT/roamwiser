@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
-import { generateItineraries, generateBudget, generateRiskPlanning, generateExploreSpots, generateStayEatRecommendations } from './services/openrouter.ts'
-import type { TripData, Itinerary, BudgetData, RiskData, ExploreSpot, StayEatRecommendation } from './services/openrouter.ts'
+import { generateItineraries, generateRiskPlanning, generateExploreSpots } from './services/openrouter.ts'
+import type { TripData, Itinerary, RiskData, ExploreSpot } from './services/openrouter.ts'
+import type { BudgetData } from './services/openrouter.ts'
 import { LogoIcon } from './components/Icons'
 import { HeroSection } from './components/HeroSection'
 import { RouteSection } from './components/RouteSection'
 import { BudgetSection } from './components/BudgetSection'
 import { SafetySection } from './components/SafetySection'
-import { StayEatSection } from './components/StayEatSection'
 import { TranslationSection } from './components/TranslationSection'
 import { GallerySection } from './components/GallerySection'
 import { AboutSection } from './components/AboutSection'
@@ -30,7 +30,6 @@ function App() {
   const [budgetData, setBudgetData] = useState<BudgetData | null>(null)
   const [riskData, setRiskData] = useState<RiskData | null>(null)
   const [exploreSpots, setExploreSpots] = useState<ExploreSpot[] | null>(null)
-  const [stayEatData, setStayEatData] = useState<StayEatRecommendation[] | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [customInterests, setCustomInterests] = useState<string[]>([])
   const [customInterestInput, setCustomInterestInput] = useState('')
@@ -129,10 +128,13 @@ function App() {
       }
 
       const generatedItineraries = await generateItineraries(tripData)
-      const generatedBudget = await generateBudget(tripData)
+      const budgetTotal = parseInt(formData.budget.replace(/[^0-9]/g, '')) || 85000
+      const generatedBudget: BudgetData = {
+        total: budgetTotal,
+        breakdown: { stay: 35, food: 20, transport: 15, activities: 20, buffer: 10 }
+      }
       const generatedRisk = await generateRiskPlanning(tripData)
       const generatedExploreSpots = await generateExploreSpots(tripData)
-      const generatedStayEat = await generateStayEatRecommendations(tripData)
 
       if (generatedItineraries.length === 0) {
         alert('Failed to generate itineraries. Please check console for errors and try again.')
@@ -142,7 +144,6 @@ function App() {
       setBudgetData(generatedBudget)
       setRiskData(generatedRisk)
       setExploreSpots(generatedExploreSpots)
-      setStayEatData(generatedStayEat)
 
       setTimeout(() => scrollToSection('route'), 600)
     } catch (error) {
@@ -162,7 +163,7 @@ function App() {
         <svg viewBox="0 0 60 1000" preserveAspectRatio="none">
           <line x1="30" y1="0" x2="30" y2="1000" stroke="rgba(217,164,65,.15)" strokeWidth="1.5" strokeDasharray="2 7"/>
           <g id="spine-dots">
-            {['hero', 'route', 'budget', 'safety', 'stay', 'about', 'contact'].map((id) => {
+            {['hero', 'route', 'budget', 'safety', 'about', 'contact'].map((id) => {
               const section = document.getElementById(id)
               const y = section ? (section.offsetTop / (document.body.scrollHeight - window.innerHeight)) * 1000 : 0
               return (
@@ -189,7 +190,6 @@ function App() {
           <a href="#route">Route</a>
           <a href="#budget">Budget</a>
           <a href="#safety">Safety</a>
-          <a href="#stay">Stay & Eat</a>
           <a href="#about">About</a>
           <a href="#contact">Contact</a>
         </div>
@@ -235,11 +235,6 @@ function App() {
         onToggleCard={toggleCard}
       />
 
-      {/* Stay & Eat Section */}
-      <StayEatSection
-        stayEatData={stayEatData}
-        isGenerating={isGenerating}
-      />
 
       {/* Translation Section */}
       <TranslationSection />
