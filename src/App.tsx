@@ -259,7 +259,7 @@ function App() {
       {/* Footer */}
       <footer>
         <div className="logo">Roamwise</div>
-        <div>© 2026 Roamwise Travel Technologies · Made for wanderers</div>
+        <div>© 2026 Jeet Baidya</div>
       </footer>
     </>
   )
