@@ -7,7 +7,6 @@ import { HeroSection } from './components/HeroSection'
 import { RouteSection } from './components/RouteSection'
 import { BudgetSection } from './components/BudgetSection'
 import { SafetySection } from './components/SafetySection'
-import { TranslationSection } from './components/TranslationSection'
 import { GallerySection } from './components/GallerySection'
 import { AboutSection } from './components/AboutSection'
 import { ContactSection } from './components/ContactSection'
@@ -235,9 +234,6 @@ function App() {
         onToggleCard={toggleCard}
       />
 
-
-      {/* Translation Section */}
-      <TranslationSection />
 
       {/* Gallery Section */}
       <GallerySection

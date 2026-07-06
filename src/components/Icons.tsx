@@ -1,4 +1,4 @@
-// Icon Components
+  // Icon Components
 export const LogoIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
     <path d="M12 2C7 2 5 6 5 10c0 6 7 12 7 12s7-6 7-12c0-4-2-8-7-8z" stroke="#D9A441" strokeWidth="1.6"/>
@@ -62,5 +62,26 @@ export const EmailIcon = () => (
 export const PhoneIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" className="contact-icon">
     <path d="M3 5c0 9 7 16 16 16l3-4-6-3-2 2c-3-1.5-5-3.5-6-6l2-2-3-6-4 3z" stroke="currentColor" strokeWidth="1.5"/>
+  </svg>
+)
+
+export const InstagramIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" className="contact-icon">
+    <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.5"/>
+    <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.5"/>
+    <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"/>
+  </svg>
+)
+
+export const TwitterIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" className="contact-icon">
+    <path d="M4 4l6.2 8.3L4 20h2.3l5-5.5L15.7 20H21l-6.5-8.7L20.5 4h-2.3l-4.7 5.1L9.3 4H4z" stroke="currentColor" strokeWidth="1.5"/>
+  </svg>
+)
+
+export const LinkedInIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" className="contact-icon">
+    <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M8 10v7M8 7.5v.01M12 17v-5.5M16 17v-3.5a2.5 2.5 0 00-5 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 )

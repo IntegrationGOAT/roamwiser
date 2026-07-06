@@ -197,7 +197,7 @@ function extractAndParseJSON(text: string, isArray = false): unknown | null {
       // Pattern: , "spotN": "Title", "description": "..."}
       // or: , "spotN": "Title", "description": "..."}
       const remaining = cleaned.slice(firstObjEnd + 1).trim()
-      
+
       // Match entries like: , "spot2": "Title", "description": "..."}
       // or: , "spot2": "Title", "description": "..."}
       const entryRegex = /,\s*"([^"]+)"\s*:\s*"([^"]*)"\s*,\s*"([^"]+)"\s*:\s*"([^"]*)"\s*\}/g
@@ -207,7 +207,7 @@ function extractAndParseJSON(text: string, isArray = false): unknown | null {
         const val1 = entryMatch[2]  // e.g. "Desert of Munnar" (this is the title)
         const key2 = entryMatch[3]  // e.g. "description"
         const val2 = entryMatch[4]  // e.g. "Discover the Desert..."
-        
+
         // Reconstruct as a proper object: {"id":"spot2","title":"Desert of Munnar","description":"..."}
         const reconstructed = `{"id":"${key1}","title":${JSON.stringify(val1)},"${key2}":${JSON.stringify(val2)}}`
         try {
@@ -274,16 +274,16 @@ async function callOpenRouterAPI(prompt: string, maxTokens = 2048, _retries = 3)
 
     const data = await response.json()
     console.log('Full API response:', data)
-    
+
     // Handle different response formats
     if (Array.isArray(data?.choices) && data.choices[0]?.message) {
       const msg = data.choices[0].message
-      
+
       // content is a plain string
       if (typeof msg.content === 'string' && msg.content.trim()) {
         return msg.content
       }
-      
+
       // content is an array of content parts (e.g. [{type: "text", text: "..."}])
       if (Array.isArray(msg.content)) {
         const textParts = msg.content
@@ -294,7 +294,7 @@ async function callOpenRouterAPI(prompt: string, maxTokens = 2048, _retries = 3)
           return textParts.join('\n')
         }
       }
-      
+
       // Some models put content in a nested reasoning/content structure
       if (msg.reasoning || msg.reasoning_content) {
         const reasoning = msg.reasoning || msg.reasoning_content
@@ -303,7 +303,7 @@ async function callOpenRouterAPI(prompt: string, maxTokens = 2048, _retries = 3)
         }
       }
     }
-    
+
     throw new Error('Invalid API response structure')
   } catch (error) {
     console.error('Error calling OpenRouter API:', error)
@@ -313,8 +313,8 @@ async function callOpenRouterAPI(prompt: string, maxTokens = 2048, _retries = 3)
 
 // Generate a single itinerary for a specific style
 async function generateSingleItinerary(
-  tripData: TripData, 
-  index: number, 
+  tripData: TripData,
+  index: number,
   style: string
 ): Promise<Itinerary | null> {
   const prompt = `Create 1 travel itinerary for ${tripData.destination}. Trip length: ${tripData.tripLength} days. Travelers: ${tripData.travelers}. Interests: ${tripData.interests.join(', ')}. Budget: ${tripData.budget}. Start date: ${tripData.startDate || 'today'}.
@@ -335,12 +335,12 @@ Format:
   try {
     const text = await callOpenRouterAPI(prompt, 2048)
     console.log(`Itinerary ${index} Response:`, text)
-    
+
     const parsed = extractAndParseJSON(text, false)
     if (parsed && typeof parsed === 'object') {
       return parsed as Itinerary
     }
-    
+
     console.error(`No valid JSON found for itinerary ${index}`)
     return null
   } catch (error) {
@@ -352,22 +352,22 @@ Format:
 export async function generateItineraries(tripData: TripData): Promise<Itinerary[]> {
   // Generate 4 itineraries one at a time to avoid large request issues
   const styles = ['Adventure', 'Relaxation', 'Cultural', 'Food & Nightlife']
-  
+
   const itineraries: Itinerary[] = []
-  
+
   for (let i = 0; i < 4; i++) {
     const itinerary = await generateSingleItinerary(tripData, i, styles[i])
     if (itinerary) {
       itineraries.push(itinerary)
     }
   }
-  
+
   // If no itineraries were generated, return empty array
   if (itineraries.length === 0) {
     console.error('No itineraries generated')
     return []
   }
-  
+
   return itineraries
 }
 
@@ -439,7 +439,7 @@ function normalizeBudgetBreakdown(total: number, raw: unknown): BudgetData['brea
 
 export async function generateBudget(tripData: TripData): Promise<BudgetData> {
   const budgetAmount = parseInt(tripData.budget.replace(/[^0-9]/g, '')) || 85000
-  
+
   const prompt = `Generate a budget breakdown for a ${tripData.tripLength}-day trip to ${tripData.destination} for ${tripData.travelers} people with total budget ₹${budgetAmount}.
 
 The "breakdown" values MUST be percentages of the total budget (whole numbers between 0 and 100) and MUST add up to exactly 100. Do NOT return rupee amounts.
@@ -459,7 +459,7 @@ Return ONLY this JSON shape:
   try {
     const text = await callOpenRouterAPI(prompt)
     console.log('Budget Response:', text)
-    
+
     const parsed = extractAndParseJSON(text, false)
     if (parsed && typeof parsed === 'object') {
       const obj = parsed as Record<string, unknown>
@@ -469,7 +469,7 @@ Return ONLY this JSON shape:
         breakdown: normalizeBudgetBreakdown(total, obj.breakdown)
       }
     }
-    
+
     // Return default if parsing fails
     return {
       total: budgetAmount,
@@ -509,12 +509,12 @@ Return JSON:
   try {
     const text = await callOpenRouterAPI(prompt)
     console.log('Risk Response:', text)
-    
+
     const parsed = extractAndParseJSON(text, false)
     if (parsed && typeof parsed === 'object') {
       return parsed as RiskData
     }
-    
+
     // Return default if parsing fails
     return {
       overall: 'Standard travel precautions advised',
@@ -551,12 +551,12 @@ Format:
   try {
     const text = await callOpenRouterAPI(prompt)
     console.log('Explore Spots Response:', text)
-    
+
     const parsed = extractAndParseJSON(text, true)
     if (parsed && Array.isArray(parsed)) {
       return parsed as ExploreSpot[]
     }
-    
+
     // Return default if parsing fails
     return [
       { id: 'backwaters', title: 'Backwaters, Kerala', description: 'Serene waterways and lush greenery' },
