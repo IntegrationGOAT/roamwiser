@@ -1,4 +1,4 @@
-import { EmailIcon, PhoneIcon } from './Icons'
+import { EmailIcon, PhoneIcon, InstagramIcon, TwitterIcon, LinkedInIcon } from './Icons'
 
 interface ContactSectionProps {}
 
@@ -30,9 +30,9 @@ export const ContactSection = ({}: ContactSectionProps) => {
           </div>
 
           <div className="socials">
-            <a href="#">ig</a>
-            <a href="#">x</a>
-            <a href="#">in</a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"><InstagramIcon /></a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"><TwitterIcon /></a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"><LinkedInIcon /></a>
           </div>
         </div>
 

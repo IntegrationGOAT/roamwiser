@@ -13,12 +13,13 @@
 #hero::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -20px;
   background: 
     radial-gradient(ellipse at 80% 0%, rgba(91, 203, 179, 0.16), transparent 55%),
     var(--hero-bg, transparent) center / cover no-repeat;
   opacity: 0.2;
   pointer-events: none;
+  filter: blur(8px);
 }
 
 #hero .contours {

@@ -1,3 +1,5 @@
+import assetsJpg from '../assets/assets.jpg'
+
 interface HeroSectionProps {
   formData: {
     destination: string
@@ -36,7 +38,7 @@ export const HeroSection = ({
   const interests = ['Adventure', 'Food', 'Nature', 'Culture', 'Nightlife', ...customInterests]
 
   return (
-    <section id="hero" data-spine="Plan">
+    <section id="hero" data-spine="Plan" style={{ '--hero-bg': `url(${assetsJpg})` } as React.CSSProperties}>
       <svg className="contours" viewBox="0 0 1200 800" preserveAspectRatio="none">
         <path d="M-50,600 Q300,500 600,600 T1250,550" stroke="#5BCBB3" strokeWidth="1" fill="none" opacity=".3"/>
         <path d="M-50,650 Q300,560 600,660 T1250,610" stroke="#5BCBB3" strokeWidth="1" fill="none" opacity=".22"/>

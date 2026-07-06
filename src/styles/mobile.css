@@ -299,22 +299,6 @@
     font-size: 12px;
   }
   
-  /* ===== TRANSLATION ===== */
-  .translate-wrap {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .chat-mock {
-    padding: 12px;
-    border-radius: 8px;
-  }
-  
-  .bubble {
-    font-size: 12px;
-    padding: 8px 10px;
-  }
-  
   /* ===== ABOUT SECTION ===== */
   .about-wrap {
     grid-template-columns: 1fr;

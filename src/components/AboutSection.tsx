@@ -32,6 +32,6 @@ export const AboutSection = ({}: AboutSectionProps) => {
           </div>
         </div>
       </div>
-    </section>
+    </section>  
   )
 }
