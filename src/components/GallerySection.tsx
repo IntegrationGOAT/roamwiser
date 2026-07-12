@@ -1,5 +1,16 @@
 import type { ExploreSpot } from "../services/groq.ts";
 
+// Convert lightweight markdown (**bold**) into safe HTML. We escape any HTML
+// first to avoid XSS, then turn **...** pairs into <strong> tags so the
+// model's emphasis markers actually render as bold instead of showing
+// literal asterisks.
+function renderMarkdownBold(input: string): string {
+    const div = document.createElement("div");
+    div.textContent = input;
+    const escaped = div.innerHTML;
+    return escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
+
 interface GallerySectionProps {
     exploreSpots: ExploreSpot[] | null;
     isGenerating: boolean;
@@ -42,9 +53,7 @@ export const GallerySection = ({ exploreSpots, isGenerating, expandedCards, onTo
             <div className="sec-head">
                 <div className="eyebrow">Explore</div>
                 <h2>A world of places to build a route through</h2>
-                <p className="muted">
-                    Live production galleries pull in real destination photography — placeholders shown here for layout.
-                </p>
+                <p className="muted">Live production galleries pull in real destination photography</p>
             </div>
 
             <div className="gallery">
@@ -68,9 +77,10 @@ export const GallerySection = ({ exploreSpots, isGenerating, expandedCards, onTo
                                     <div className="eyebrow">{tile.title}</div>
                                     <p
                                         dangerouslySetInnerHTML={{
-                                            __html:
+                                            __html: renderMarkdownBold(
                                                 tile.description ||
-                                                "Explore this destination for a fuller local perspective.",
+                                                    "Explore this destination for a fuller local perspective.",
+                                            ),
                                         }}
                                     />
                                 </div>

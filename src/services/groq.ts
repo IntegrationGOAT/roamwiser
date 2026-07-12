@@ -4,6 +4,15 @@ import { generateText } from "ai";
 const MODEL = "openai/gpt-oss-20b";
 const groq = createGroq({ apiKey: import.meta.env.VITE_GROQ_API_KEY });
 
+// gpt-oss-20b is a reasoning model. Without an explicit reasoning format,
+// Groq may return the final answer inside the reasoning field and leave the
+// `content` field empty — which makes `generateText().text` come back as an
+// empty string (especially in the browser's streaming path). Setting
+// `reasoningFormat: "parsed"` forces the model to always emit the final
+// answer in the `content` field that `text` reads from.
+const groqModel = groq(MODEL);
+const GROQ_OPTIONS = { reasoningFormat: "parsed" as const };
+
 export interface TripData {
     destination: string;
     travelers: number;
@@ -216,12 +225,18 @@ async function callGroqAPI(prompt: string): Promise<string> {
     try {
         console.log("Calling Groq via AI SDK...");
 
-        const { text } = await generateText({
-            model: groq(MODEL),
+        const result = await generateText({
+            model: groqModel,
             system: "Return only valid JSON. Do not include markdown fences, explanations, or extra text. Keep responses concise.",
             prompt,
             temperature: 0.1,
+            providerOptions: { groq: GROQ_OPTIONS },
         });
+
+        // Defensive: reasoning models can occasionally surface the answer in
+        // the reasoning field instead of `text`. Fall back to it so we never
+        // return an empty string when content is actually present.
+        const text = result.text?.trim() || (result.reasoningText ?? "").trim();
 
         console.log("Groq response:", text);
         return text;
@@ -234,17 +249,18 @@ async function callGroqAPI(prompt: string): Promise<string> {
 // Free-form chat: send the user's prompt straight to the model and return
 // the generated text. No JSON constraints, no structured output.
 export async function generateChatResponse(prompt: string): Promise<string> {
-    const { text } = await generateText({
-        model: groq(MODEL),
+    const result = await generateText({
+        model: groqModel,
         system:
             "You are RoamwiseAI, a friendly and knowledgeable travel assistant. " +
             "Answer the user's questions clearly, concisely, and helpfully. " +
             "Use markdown formatting when it improves readability.",
         prompt,
         temperature: 0.7,
+        providerOptions: { groq: GROQ_OPTIONS },
     });
 
-    return text;
+    return result.text?.trim() || (result.reasoningText ?? "").trim();
 }
 
 // Generate a single itinerary for a specific style
